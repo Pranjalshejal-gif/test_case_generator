@@ -14,35 +14,39 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                script {
+                    sh 'pip install --upgrade pip'
+                    sh 'pip install -r requirements.txt'
+                }
             }
         }
 
-        stage('Start Flask and Generate Test Cases') {
+        stage('Start Flask Server') {
             steps {
                 script {
-                    // Start Flask in the background and redirect output to a log file
+                    echo "Starting Flask server..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5 // Wait for Flask to start
-                    
-                    // Send request to Flask API to generate test cases
-                    def response = sh(
-                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"Login Functionality\", \"num_cases\": 5}'",
-                        returnStdout: true
-                    ).trim()
-                    echo "Flask API Response: ${response}"
-                    
-                    // Extract CSV filename from API response
-                    def match = (response =~ /"csv_filename": "(.*?)"/)
-                    if (match) {
-                        env.CSV_FILE = match[0][1]
-                        echo "Extracted CSV file: ${env.CSV_FILE}"
-                    } else {
-                        error "Failed to extract CSV filename from response."
-                    }
+                    sleep 10 // Wait for Flask to start
+                    echo "Flask app started. Open the browser and interact with the UI."
+                }
+            }
+        }
 
-                    // Stop Flask server
-                    sh "pkill -f app.py"
+        stage('Wait for CSV File') {
+            steps {
+                script {
+                    def csvFile
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitUntil {
+                            csvFile = sh(
+                                script: "ls *.csv 2>/dev/null || echo ''",
+                                returnStdout: true
+                            ).trim()
+                            return csvFile != ''
+                        }
+                    }
+                    echo "Found CSV file: ${csvFile}"
+                    env.CSV_FILE = csvFile
                 }
             }
         }
