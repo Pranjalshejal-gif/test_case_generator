@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'
-        JIRA_CREDENTIALS = credentials('testcase')  // Make sure you configure this in Jenkins
+        JIRA_CREDENTIALS = credentials('test cases created')  // Make sure you configure this in Jenkins
     }
 
     stages {
