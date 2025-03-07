@@ -8,33 +8,41 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                // Clone the repository that contains the Flask app and Jenkinsfile
                 git branch: 'main', url: 'https://github.com/Pranjalshejal-gif/test_case_generator.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Install dependencies specified in requirements.txt
                 sh 'pip install -r requirements.txt'
             }
         }
 
-        stage('Generate Test Cases') {
+        stage('Start Flask and Generate Test Cases') {
             steps {
                 script {
-                    // Run the Flask app to generate test cases (CSV and JSON)
-                    sh 'python3 app.py'
-
-                    // Get the current date and time to dynamically generate the CSV file name
-                    def currentTime = new Date().format("yyyy-MM-dd_HH-mm-ss")
-                    env.CSV_FILE = "test_cases_${currentTime}.csv"
-                    echo "Generated CSV file name: ${env.CSV_FILE}"
-
-                    // Ensure the file is created before proceeding
-                    if (!fileExists("${env.CSV_FILE}")) {
-                        error "CSV file was not created."
+                    // Start Flask in the background and redirect output to a log file
+                    sh 'nohup python3 app.py > flask_output.log 2>&1 &'
+                    sleep 5 // Wait for Flask to start
+                    
+                    // Send request to Flask API to generate test cases
+                    def response = sh(
+                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"Login Functionality\", \"num_cases\": 5}'",
+                        returnStdout: true
+                    ).trim()
+                    echo "Flask API Response: ${response}"
+                    
+                    // Extract CSV filename from API response
+                    def match = (response =~ /"csv_filename": "(.*?)"/)
+                    if (match) {
+                        env.CSV_FILE = match[0][1]
+                        echo "Extracted CSV file: ${env.CSV_FILE}"
+                    } else {
+                        error "Failed to extract CSV filename from response."
                     }
+
+                    // Stop Flask server
+                    sh "pkill -f app.py"
                 }
             }
         }
@@ -43,7 +51,6 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
-                        // Upload the generated CSV test cases to Jira Xray
                         def response = sh(
                             script: """
                             curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
@@ -53,7 +60,6 @@ pipeline {
                         ).trim()
                         echo "Response from Jira: ${response}"
 
-                        // Handle response (if needed)
                         if (response.contains("error")) {
                             error "Failed to upload to Jira: ${response}"
                         }
