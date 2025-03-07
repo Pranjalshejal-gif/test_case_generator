@@ -1,17 +1,15 @@
 pipeline {
     agent any
 
-
     environment {
         JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'
-        JIRA_CREDENTIALS = credentials('testcase')  // Make sure you configure this in Jenkins
     }
 
     stages {
         stage('Clone Repository') {
             steps {
                 // Clone the repository that contains the Flask app and Jenkinsfile
-                git 'https://github.com/Pranjalshejal-gif/test_case_generator.git'  // Replace with your GitHub repo URL
+                git branch: 'main', url: 'https://github.com/Pranjalshejal-gif/test_case_generator.git' // Specify the branch
             }
         }
 
@@ -39,15 +37,17 @@ pipeline {
         stage('Upload to Jira Xray') {
             steps {
                 script {
-                    // Upload the generated CSV test cases to Jira Xray
-                    def response = sh(
-                        script: """
-                        curl -u ${JIRA_CREDENTIALS} -X POST -H "Content-Type: multipart/form-data" \
-                        -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
-                        """,
-                        returnStdout: true
-                    ).trim()
-                    echo "Response from Jira: ${response}"
+                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
+                        // Upload the generated CSV test cases to Jira Xray
+                        def response = sh(
+                            script: """
+                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
+                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        echo "Response from Jira: ${response}"
+                    }
                 }
             }
         }
