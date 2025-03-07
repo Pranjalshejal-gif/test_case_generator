@@ -1,0 +1,458 @@
+[
+    {
+        "Test Case ID": "TC001",
+        "Feature": "Placeholder Feature",
+        "Scenario": "## 5 Test Cases for UPI Functionality",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC002",
+        "Feature": "Placeholder Feature",
+        "Scenario": "These test cases cover various aspects of a UPI transaction flow.  They assume a mobile application is being tested.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC003",
+        "Feature": "Placeholder Feature",
+        "Scenario": "**Test Case 1: Successful Transaction**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC004",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Objective:** Verify a successful UPI transaction with valid credentials.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC005",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Preconditions:**  User is logged in, has a valid UPI linked bank account with sufficient balance, and a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC006",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Steps:**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC007",
+        "Feature": "Placeholder Feature",
+        "Scenario": "1. Navigate to the \"Send Money\" or equivalent section.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC008",
+        "Feature": "Placeholder Feature",
+        "Scenario": "2. Enter a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC009",
+        "Feature": "Placeholder Feature",
+        "Scenario": "3. Enter a valid amount (e.g., 100).",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC010",
+        "Feature": "Placeholder Feature",
+        "Scenario": "4. Click \"Send\" or equivalent.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC011",
+        "Feature": "Placeholder Feature",
+        "Scenario": "5. Enter UPI PIN on the prompted screen.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC012",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Expected Result:** Transaction is successful. Confirmation message is displayed with transaction details (transaction ID, amount, date, recipient). Account balance is updated correctly.  Transaction history reflects the transaction.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC013",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Pass/Fail Criteria:** Pass if all expected results are met. Fail otherwise.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC014",
+        "Feature": "Placeholder Feature",
+        "Scenario": "**Test Case 2: Insufficient Funds**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC015",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Objective:** Verify the behavior of the app when the user attempts a transaction with insufficient funds.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC016",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Preconditions:** User is logged in, has a valid UPI linked bank account with insufficient balance for the transaction amount, and a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC017",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Steps:**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC018",
+        "Feature": "Placeholder Feature",
+        "Scenario": "1. Navigate to the \"Send Money\" section.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC019",
+        "Feature": "Placeholder Feature",
+        "Scenario": "2. Enter a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC020",
+        "Feature": "Placeholder Feature",
+        "Scenario": "3. Enter an amount exceeding the available balance.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC021",
+        "Feature": "Placeholder Feature",
+        "Scenario": "4. Click \"Send\".",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC022",
+        "Feature": "Placeholder Feature",
+        "Scenario": "5. (Optional) Enter UPI PIN if prompted.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC023",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Expected Result:**  Transaction fails.  An appropriate error message is displayed indicating insufficient funds. Account balance remains unchanged. No transaction is recorded in the history.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC024",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Pass/Fail Criteria:** Pass if all expected results are met. Fail otherwise.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC025",
+        "Feature": "Placeholder Feature",
+        "Scenario": "**Test Case 3: Invalid Recipient UPI ID**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC026",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Objective:** Verify the app's response to an invalid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC027",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Preconditions:** User is logged in, has a valid UPI linked bank account with sufficient balance.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC028",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Steps:**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC029",
+        "Feature": "Placeholder Feature",
+        "Scenario": "1. Navigate to the \"Send Money\" section.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC030",
+        "Feature": "Placeholder Feature",
+        "Scenario": "2. Enter an invalid recipient UPI ID (e.g., incorrect format, non-existent ID).",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC031",
+        "Feature": "Placeholder Feature",
+        "Scenario": "3. Enter a valid amount.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC032",
+        "Feature": "Placeholder Feature",
+        "Scenario": "4. Click \"Send\".",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC033",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Expected Result:** Transaction fails. An appropriate error message is displayed indicating the invalid recipient UPI ID. Account balance remains unchanged. No transaction is recorded in the history.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC034",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Pass/Fail Criteria:** Pass if all expected results are met. Fail otherwise.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC035",
+        "Feature": "Placeholder Feature",
+        "Scenario": "**Test Case 4: Network Interruption**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC036",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Objective:** Verify the app's behavior during a network interruption during a transaction.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC037",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Preconditions:** User is logged in, has a valid UPI linked bank account with sufficient balance, and a valid recipient UPI ID.  Simulate network interruption (e.g., airplane mode, disabling Wi-Fi).",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC038",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Steps:**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC039",
+        "Feature": "Placeholder Feature",
+        "Scenario": "1. Navigate to the \"Send Money\" section.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC040",
+        "Feature": "Placeholder Feature",
+        "Scenario": "2. Enter a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC041",
+        "Feature": "Placeholder Feature",
+        "Scenario": "3. Enter a valid amount.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC042",
+        "Feature": "Placeholder Feature",
+        "Scenario": "4. Click \"Send\".",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC043",
+        "Feature": "Placeholder Feature",
+        "Scenario": "5. Simulate network interruption *before* entering UPI PIN or immediately after.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC044",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Expected Result:** Transaction fails. An appropriate error message is displayed regarding network connectivity issues. Account balance remains unchanged (or is reverted if the transaction was partially processed). Transaction status should be clearly indicated (failed or pending).",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC045",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Pass/Fail Criteria:** Pass if all expected results are met. Fail otherwise.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC046",
+        "Feature": "Placeholder Feature",
+        "Scenario": "**Test Case 5:  Incorrect UPI PIN**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC047",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Objective:** Verify the app's handling of incorrect UPI PIN entry.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC048",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Preconditions:** User is logged in, has a valid UPI linked bank account with sufficient balance, and a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC049",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Steps:**",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC050",
+        "Feature": "Placeholder Feature",
+        "Scenario": "1. Navigate to the \"Send Money\" section.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC051",
+        "Feature": "Placeholder Feature",
+        "Scenario": "2. Enter a valid recipient UPI ID.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC052",
+        "Feature": "Placeholder Feature",
+        "Scenario": "3. Enter a valid amount.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC053",
+        "Feature": "Placeholder Feature",
+        "Scenario": "4. Click \"Send\".",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC054",
+        "Feature": "Placeholder Feature",
+        "Scenario": "5. Enter an incorrect UPI PIN.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC055",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Expected Result:** Transaction fails. An appropriate error message is displayed indicating the incorrect PIN. Account balance remains unchanged. No transaction is recorded in the history.  Optionally, after multiple incorrect attempts, the UPI functionality might be temporarily blocked as a security measure. This should also be tested.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC056",
+        "Feature": "Placeholder Feature",
+        "Scenario": "* **Pass/Fail Criteria:** Pass if all expected results are met. Fail otherwise.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    },
+    {
+        "Test Case ID": "TC057",
+        "Feature": "Placeholder Feature",
+        "Scenario": "These test cases provide a starting point for UPI testing and can be further expanded to cover more scenarios, including boundary conditions, different UPI apps, and specific features within the app.  They focus on functional testing, but performance and security testing are equally important aspects to consider.",
+        "Test Steps": "Placeholder Steps",
+        "Expected Result": "Placeholder Expected Result",
+        "Status": "Placeholder Status"
+    }
+]

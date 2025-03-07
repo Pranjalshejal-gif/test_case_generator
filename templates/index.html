@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Test Case Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            /* text-align: center; */
+        }
+
+        #topic {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            width: 50%;
+
+        }
+
+        #num_cases {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            /* width: 50%; */
+
+        }
+
+        button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            background-color: #1049e4;
+            border-radius: 5px;
+        }
+
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            text-align: left;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <h2>AI Test Case Generator</h2>
+    <input type="text" id="topic1" placeholder="Enter Your Test Case Scenario">
+    <input type="number" id="number1" placeholder="Number of Test Cases" value="0"></input>
+    <button onclick="generateTestCases()">Generate</button> -->
+
+    <h2>AI Test Case Generator</h2>
+    <input type="text" id="topic" placeholder="Enter test case topic">
+    <input type="number" id="num_cases" placeholder="Number of test cases" value="5">
+    <button onclick="generateTestCases()">Generate</button>
+
+    <h3>Generated Test Cases:</h3>
+    <div id="result">Waiting for input...</div>
+
+    <script>
+        function generateTestCases() {
+            let topic = document.getElementById("topic").value;
+            let numCases = document.getElementById("num_cases").value;
+
+            document.getElementById("result").innerText = "Generating test cases...";
+
+            fetch("/generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ topic: topic, num_cases: numCases })
+
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("result").innerText = data.test_cases;
+                    console.log(data);
+                    // console
+                })
+                .catch(error => {
+                    document.getElementById("result").innerText = "Error: " + error;
+                });
+        }
+    </script>
+
+</body>
+
+</html>

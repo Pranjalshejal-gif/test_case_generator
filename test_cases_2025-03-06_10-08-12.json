@@ -1,0 +1,66 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Case ID": "TCTC001",
+        "Test Scenario": "New order placed - Push notification to restaurant",
+        "Test Data": {
+            "user": "testuser1",
+            "restaurant": "Restaurant A",
+            "order items": [
+                "Burger",
+                "Fries",
+                "Coke"
+            ],
+            "order total": 25.5
+        },
+        "Expected Result": "Restaurant A receives a push notification with details of the new order (user, items, total). Notification should appear instantly upon order confirmation.",
+        "Status": "Pending"
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Case ID": "TCTC002",
+        "Test Scenario": "Order status update - Push notification to customer",
+        "Test Data": {
+            "user": "testuser2",
+            "restaurant": "Restaurant B",
+            "order status": "Preparing"
+        },
+        "Expected Result": "Customer (testuser2) receives a push notification indicating the order status change to 'Preparing'.",
+        "Status": "Pending"
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Case ID": "TCTC003",
+        "Test Scenario": "Delivery driver assigned - Push notification to customer",
+        "Test Data": {
+            "user": "testuser3",
+            "driver": "Driver X",
+            "estimated delivery time": "30 minutes"
+        },
+        "Expected Result": "Customer (testuser3) receives a push notification informing them that driver X has been assigned and the estimated delivery time is 30 minutes.",
+        "Status": "Pending"
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Case ID": "TCTC004",
+        "Test Scenario": "Promotional offer - Push notification to all users in a specific location",
+        "Test Data": {
+            "location": "City Center",
+            "promo code": "DISCOUNT20",
+            "offer details": "20% off on orders above $50"
+        },
+        "Expected Result": "All users within the 'City Center' location receive a push notification about the promotional offer (DISCOUNT20 for 20% off). Notification should include offer details and validity.",
+        "Status": "Pending"
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Case ID": "TCTC005",
+        "Test Scenario": "App update available - Push notification to all users",
+        "Test Data": {
+            "app version": "2.0.0",
+            "update details": "Bug fixes and performance improvements"
+        },
+        "Expected Result": "All app users receive a push notification informing them about the new app update (version 2.0.0). The notification should include brief update details and a link to the app store.",
+        "Status": "Pending"
+    }
+]

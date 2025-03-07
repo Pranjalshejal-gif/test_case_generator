@@ -1,0 +1,71 @@
+TCID,Test Summary,Description,Test Type,Test Step,Test Data,Expected Result,Labels,Priority
+TC001,```json,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC002,[,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC003,  {,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC004,"    ""topic"": ""User login functionality"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC005,"    ""num_cases"": 5,",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC006,"    ""test_cases"": [",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC007,      {,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC008,"        ""title"": ""Valid username and password"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC009,"        ""description"": ""Verify successful login with correct credentials."",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC010,"        ""input"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC011,"          ""username"": ""testuser"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC012,"          ""password"": ""password123""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC013,"        },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC014,"        ""expected_output"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC015,"          ""status_code"": 200,",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC016,"          ""message"": ""Login successful""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC017,        },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC018,"      },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC019,      {,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC020,"        ""title"": ""Invalid username"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC021,"        ""description"": ""Attempt login with an incorrect username."",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC022,"        ""input"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC023,"          ""username"": ""invaliduser"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC024,"          ""password"": ""password123""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC025,"        },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC026,"        ""expected_output"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC027,"          ""status_code"": 401,",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC028,"          ""message"": ""Invalid username or password""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC029,        },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC030,"      },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC031,      {,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC032,"        ""title"": ""Invalid password"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC033,"        ""description"": ""Attempt login with an incorrect password."",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC034,"        ""input"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC035,"          ""username"": ""testuser"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC036,"          ""password"": ""wrongpassword""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC037,"        },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC038,"        ""expected_output"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC039,"          ""status_code"": 401,",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC040,"          ""message"": ""Invalid username or password""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC041,        },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC042,"      },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC043,      {,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC044,"        ""title"": ""Empty username and password"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC045,"        ""description"": ""Attempt login with empty username and password fields."",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC046,"        ""input"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC047,"          ""username"": """",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC048,"          ""password"": """"",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC049,"        },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC050,"        ""expected_output"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC051,"          ""status_code"": 400,",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC052,"          ""message"": ""Username and password are required"" ",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC053,        },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC054,"      },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC055,      {,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC056,"        ""title"": ""User account locked"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC057,"        ""description"": ""Attempt login with a locked user account (assuming such a feature exists)."",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC058,"        ""input"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC059,"          ""username"": ""lockeduser"",",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC060,"          ""password"": ""password123""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC061,"        },",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC062,"        ""expected_output"": {",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC063,"          ""status_code"": 403,",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC064,"          ""message"": ""Account locked""",Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC065,        },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC066,      },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC067,    ],Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC068,  },Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC069,],Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder
+TC070,```,Description placeholder,Functional,Step placeholder,Data placeholder,Expected result placeholder,Labels placeholder,Priority placeholder

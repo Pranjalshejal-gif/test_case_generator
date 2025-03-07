@@ -1,0 +1,72 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Case ID": "TCTC001",
+        "Test Scenario": "Successful bill payment with valid details.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456789",
+        "Expected Result": "status: SUCCESS, transactionId: BBPS_TXN_001, responseCode: 00, responseMessage: Payment successful, billerResponseCode: Success, billerResponseMessage: Transaction completed successfully."
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Case ID": "TCTC002",
+        "Test Scenario": "Bill payment fails due to insufficient balance.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456780",
+        "Expected Result": "status: FAILURE, transactionId: None, responseCode: 12, responseMessage: Insufficient balance, billerResponseCode: Failure, billerResponseMessage: Insufficient funds in the payer's account."
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Case ID": "TCTC003",
+        "Test Scenario": "Bill payment fails due to invalid biller ID.",
+        "Test Data": "billerId: INVALID_BILLER, customerMobile: 9876543210, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456781",
+        "Expected Result": "status: FAILURE, transactionId: None, responseCode: 03, responseMessage: Invalid biller, billerResponseCode: Invalid Biller, billerResponseMessage: Biller ID is not valid."
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Case ID": "TCTC004",
+        "Test Scenario": "Bill payment fails due to invalid customer mobile number.",
+        "Test Data": "billerId: ABC12345, customerMobile: 12345, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456782",
+        "Expected Result": "status: FAILURE, transactionId: None, responseCode: 04, responseMessage: Invalid customer identifier, billerResponseCode: Invalid Customer Number, billerResponseMessage: Customer mobile number is not valid."
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Case ID": "TCTC005",
+        "Test Scenario": "Bill payment successful using Wallet payment mode.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 500.0, paymentMode: WALLET, payerAccountId: user123_wallet, transactionReferenceId: TXN123456783",
+        "Expected Result": "status: SUCCESS, transactionId: BBPS_TXN_002, responseCode: 00, responseMessage: Payment successful, billerResponseCode: Success, billerResponseMessage: Transaction completed successfully."
+    },
+    {
+        "Test Case No": "TC006",
+        "Test Case ID": "TCTC006",
+        "Test Scenario": "Bill payment fails due to timeout from biller.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456784",
+        "Expected Result": "status: FAILURE, transactionId: None, responseCode: 05, responseMessage: Timeout from biller, billerResponseCode: Timeout, billerResponseMessage: Biller did not respond within the expected time."
+    },
+    {
+        "Test Case No": "TC007",
+        "Test Case ID": "TCTC007",
+        "Test Scenario": "Bill payment successful with zero bill amount.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 0.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456785",
+        "Expected Result": "status: SUCCESS, transactionId: BBPS_TXN_003, responseCode: 00, responseMessage: Payment successful, billerResponseCode: Success, billerResponseMessage: Transaction completed successfully."
+    },
+    {
+        "Test Case No": "TC008",
+        "Test Case ID": "TCTC008",
+        "Test Scenario": "Bill payment failure due to duplicate transaction reference ID.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456789",
+        "Expected Result": "status: FAILURE, transactionId: None, responseCode: 06, responseMessage: Duplicate transaction, billerResponseCode: Duplicate Transaction, billerResponseMessage: Transaction reference ID already exists."
+    },
+    {
+        "Test Case No": "TC009",
+        "Test Case ID": "TCTC009",
+        "Test Scenario": "Bill payment partially successful but requires manual reconciliation (e.g. technical glitch at biller end).",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 1000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456787",
+        "Expected Result": "status: PENDING, transactionId: BBPS_TXN_004, responseCode: 07, responseMessage: Payment processing, requires reconciliation, billerResponseCode: Processing, billerResponseMessage: Payment is being processed, may require manual reconciliation."
+    },
+    {
+        "Test Case No": "TC010",
+        "Test Case ID": "TCTC010",
+        "Test Scenario": "Bill Payment with an amount exceeding maximum limit.",
+        "Test Data": "billerId: ABC12345, customerMobile: 9876543210, billAmount: 500000.0, paymentMode: UPI, payerAccountId: user123_upi, transactionReferenceId: TXN123456788",
+        "Expected Result": "status: FAILURE, transactionId: None, responseCode: 08, responseMessage: Amount exceeds limit, billerResponseCode: Invalid Amount, billerResponseMessage: The bill amount exceeds the maximum allowed limit."
+    }
+]

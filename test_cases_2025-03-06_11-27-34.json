@@ -1,0 +1,82 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Step": "TCTC001",
+        "Test Type": "Manual",
+        "Test Summary": "Successful Bill Payment - Electricity Bill",
+        "Test Data": "billerCategory: Electricity, billerId: POWERCO_ELECTRICITY_123, customerMobileNumber: 9876543210, customerAccountNumber: 1234567890, amount: 1000.0, paymentMode: UPI, upiId: user@upi, transactionReferenceId: TXN123456789",
+        "Expected Result": "status: SUCCESS, transactionId: BBPS_TXN_987654321, billerResponseCode: 00, billerResponseMessage: Payment Successful, paymentReceipt: {'billAmount': 1000.0, 'convenienceFee': 0.0, 'totalAmount': 1000.0, 'paymentDate': '2024-10-27', 'paymentMode': 'UPI', 'billerName': 'PowerCo Electricity'}"
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Step": "TCTC002",
+        "Test Type": "Manual",
+        "Test Summary": "Failed Bill Payment - Insufficient Funds",
+        "Test Data": "billerCategory: Insurance, billerId: LIFEINSURE_001, customerMobileNumber: 8765432109, customerPolicyNumber: ABC123XYZ, amount: 5000.0, paymentMode: Debit Card, cardNumber: 4111111111111111, cardExpiry: 12/25, cardCVV: 123, transactionReferenceId: TXN987654321",
+        "Expected Result": "status: FAILED, transactionId: None, billerResponseCode: 10, billerResponseMessage: Insufficient Funds, paymentReceipt: None"
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Step": "TCTC003",
+        "Test Type": "Manual",
+        "Test Summary": "Invalid Biller Category",
+        "Test Data": "billerCategory: INVALID_CATEGORY, billerId: ANY_BILLER_ID, customerMobileNumber: 7654321098, customerAccountNumber: ANY_ACCOUNT, amount: 100.0, paymentMode: Net Banking, bankCode: ICICI, transactionReferenceId: TXN543210987",
+        "Expected Result": "status: ERROR, errorCode: INVALID_CATEGORY, errorMessage: The specified biller category is invalid., transactionId: None, billerResponseCode: None, billerResponseMessage: None, paymentReceipt: None"
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Step": "TCTC004",
+        "Test Type": "Manual",
+        "Test Summary": "Invalid Biller ID",
+        "Test Data": "billerCategory: Electricity, billerId: INVALID_BILLER_ID, customerMobileNumber: 6543210987, customerAccountNumber: ANY_ACCOUNT, amount: 200.0, paymentMode: Wallet, walletProvider: PAYTM, transactionReferenceId: TXN432109876",
+        "Expected Result": "status: ERROR, errorCode: INVALID_BILLER, errorMessage: The specified biller ID is invalid., transactionId: None, billerResponseCode: None, billerResponseMessage: None, paymentReceipt: None"
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Step": "TCTC005",
+        "Test Type": "Manual",
+        "Test Summary": "Successful Payment with Convenience Fee",
+        "Test Data": "billerCategory: Gas, billerId: GAS_CORP_002, customerMobileNumber: 5432109876, customerAccountNumber: GAS12345, amount: 750.0, paymentMode: UPI, upiId: test@upi, transactionReferenceId: TXN321098765",
+        "Expected Result": "status: SUCCESS, transactionId: BBPS_TXN_123456789, billerResponseCode: 00, billerResponseMessage: Payment Successful, paymentReceipt: {'billAmount': 750.0, 'convenienceFee': 10.0, 'totalAmount': 760.0, 'paymentDate': '2024-10-27', 'paymentMode': 'UPI', 'billerName': 'Gas Corp'}"
+    },
+    {
+        "Test Case No": "TC006",
+        "Test Step": "TCTC006",
+        "Test Type": "Manual",
+        "Test Summary": "Payment Failure - Invalid Card Details",
+        "Test Data": "billerCategory: DTH, billerId: TATASKY_001, customerMobileNumber: 4321098765, customerAccountNumber: TS12345, amount: 300.0, paymentMode: Debit Card, cardNumber: INVALID_CARD_NUMBER, cardExpiry: 12/25, cardCVV: 123, transactionReferenceId: TXN210987654",
+        "Expected Result": "status: FAILED, transactionId: None, billerResponseCode: 12, billerResponseMessage: Invalid Card Number, paymentReceipt: None"
+    },
+    {
+        "Test Case No": "TC007",
+        "Test Step": "TCTC007",
+        "Test Type": "Manual",
+        "Test Summary": "Payment Failure - Biller System Down",
+        "Test Data": "billerCategory: Broadband, billerId: AIRTEL_BROADBAND_001, customerMobileNumber: 3210987654, customerAccountNumber: AB12345, amount: 900.0, paymentMode: Net Banking, bankCode: HDFC, transactionReferenceId: TXN109876543",
+        "Expected Result": "status: FAILED, transactionId: None, billerResponseCode: 99, billerResponseMessage: Biller System Down, paymentReceipt: None"
+    },
+    {
+        "Test Case No": "TC008",
+        "Test Step": "TCTC008",
+        "Test Type": "Manual",
+        "Test Summary": "Payment with OTP Verification (Simulated)",
+        "Test Data": "billerCategory: Loan, billerId: HDFC_LOAN_001, customerMobileNumber: 2109876543, customerLoanAccountNumber: LN12345, amount: 2500.0, paymentMode: Debit Card, cardNumber: 4111111111111111, cardExpiry: 12/25, cardCVV: 123, otp: 123456, transactionReferenceId: TXN098765432",
+        "Expected Result": "status: SUCCESS, transactionId: BBPS_TXN_234567890, billerResponseCode: 00, billerResponseMessage: Payment Successful, paymentReceipt: {'billAmount': 2500.0, 'convenienceFee': 0.0, 'totalAmount': 2500.0, 'paymentDate': '2024-10-27', 'paymentMode': 'Debit Card', 'billerName': 'HDFC Loan'}"
+    },
+    {
+        "Test Case No": "TC009",
+        "Test Step": "TCTC009",
+        "Test Type": "Manual",
+        "Test Summary": "Payment Failure - Invalid OTP",
+        "Test Data": "billerCategory: Loan, billerId: HDFC_LOAN_001, customerMobileNumber: 2109876543, customerLoanAccountNumber: LN12345, amount: 2500.0, paymentMode: Debit Card, cardNumber: 4111111111111111, cardExpiry: 12/25, cardCVV: 123, otp: 000000, transactionReferenceId: TXN098765432",
+        "Expected Result": "status: FAILED, transactionId: None, billerResponseCode: 05, billerResponseMessage: Invalid OTP, paymentReceipt: None"
+    },
+    {
+        "Test Case No": "TC010",
+        "Test Step": "TCTC010",
+        "Test Type": "Manual",
+        "Test Summary": "Refund successful - partial refund",
+        "Test Data": "transactionId: BBPS_TXN_987654321, refundAmount: 500.0, reason: Partial service not provided.",
+        "Expected Result": "status: SUCCESS, refundId: REFUND_123456789, refundStatus: COMPLETED, refundAmount: 500.0, originalTransactionId: BBPS_TXN_987654321, message: Refund initiated successfully."
+    }
+]

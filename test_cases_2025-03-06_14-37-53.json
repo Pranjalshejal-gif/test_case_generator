@@ -1,0 +1,82 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Step": "TCTC001",
+        "Test Type": "Manual",
+        "Test Summary": "Validate CBDC transfer between two users on different banks integrated with NPCI.",
+        "Test Data": "sender_upi_id: user1@banka, receiver_upi_id: user2@bankb, amount: 10.00, transaction_note: Test transfer, sender_bank: Bank A, receiver_bank: Bank B, sender_cbdc_balance_before: 100.00, receiver_cbdc_balance_before: 50.00",
+        "Expected Result": "transaction_status: Success, sender_cbdc_balance_after: 90.00, receiver_cbdc_balance_after: 60.00, transaction_id: Generated Unique Transaction ID, transaction_timestamp: Current Timestamp, npc_settlement_status: Settled"
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Step": "TCTC002",
+        "Test Type": "Manual",
+        "Test Summary": "Test CBDC transfer exceeding sender's available balance.",
+        "Test Data": "sender_upi_id: user3@bankc, receiver_upi_id: user4@bankd, amount: 200.00, transaction_note: Overdraft attempt, sender_cbdc_balance_before: 50.00",
+        "Expected Result": "transaction_status: Failed, error_code: INSUFFICIENT_BALANCE, error_message: Insufficient CBDC balance in sender's account., sender_cbdc_balance_after: 50.00"
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Step": "TCTC003",
+        "Test Type": "Manual",
+        "Test Summary": "Verify the integrity of CBDC transaction data through NPCI's ledger.",
+        "Test Data": "transaction_id: Generated Unique Transaction ID from Test Case 1, expected_sender_upi_id: user1@banka, expected_receiver_upi_id: user2@bankb, expected_amount: 10.00, expected_transaction_status: Success",
+        "Expected Result": "npc_ledger_record_exists: True, ledger_data_matches_input: True, data_integrity_check: Passed"
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Step": "TCTC004",
+        "Test Type": "Manual",
+        "Test Summary": "Simulate a transaction failure during NPCI settlement and ensure appropriate rollback.",
+        "Test Data": "sender_upi_id: user5@banke, receiver_upi_id: user6@bankf, amount: 25.00, npc_settlement_simulation: Failure, sender_cbdc_balance_before: 75.00, receiver_cbdc_balance_before: 25.00",
+        "Expected Result": "transaction_status: Failed, error_code: SETTLEMENT_FAILED, error_message: Transaction failed due to settlement issues at NPCI., sender_cbdc_balance_after: 75.00, receiver_cbdc_balance_after: 25.00"
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Step": "TCTC005",
+        "Test Type": "Manual",
+        "Test Summary": "Test CBDC transfer with invalid UPI ID format.",
+        "Test Data": "sender_upi_id: invalid_upi_id, receiver_upi_id: user7@bankg, amount: 5.00",
+        "Expected Result": "transaction_status: Failed, error_code: INVALID_UPI_ID, error_message: Invalid UPI ID format for sender., sender_cbdc_balance_after: No change as transaction didn't occur."
+    },
+    {
+        "Test Case No": "TC006",
+        "Test Step": "TCTC006",
+        "Test Type": "Manual",
+        "Test Summary": "Verify the successful reversal of a failed CBDC transaction.",
+        "Test Data": "transaction_id: Transaction ID from Failed Test Case (e.g., Test Case 4), original_sender_balance: 75.00, original_receiver_balance: 25.00",
+        "Expected Result": "reversal_status: Success, sender_balance_after_reversal: 75.00, receiver_balance_after_reversal: 25.00"
+    },
+    {
+        "Test Case No": "TC007",
+        "Test Step": "TCTC007",
+        "Test Type": "Manual",
+        "Test Summary": "Test CBDC transfer with a negative amount.",
+        "Test Data": "sender_upi_id: user8@bankh, receiver_upi_id: user9@banki, amount: -10.00",
+        "Expected Result": "transaction_status: Failed, error_code: INVALID_AMOUNT, error_message: Transaction amount must be a positive value."
+    },
+    {
+        "Test Case No": "TC008",
+        "Test Step": "TCTC008",
+        "Test Type": "Manual",
+        "Test Summary": "Check compliance with KYC/AML regulations during a large CBDC transaction.",
+        "Test Data": "sender_upi_id: user10@bankj, receiver_upi_id: user11@bankk, amount: 50000.00, kyc_status_sender: Verified, aml_check_sender: Passed",
+        "Expected Result": "transaction_status: Success, compliance_checks_triggered: True, transaction_approved_by_compliance: True"
+    },
+    {
+        "Test Case No": "TC009",
+        "Test Step": "TCTC009",
+        "Test Type": "Manual",
+        "Test Summary": "Verify the secure storage and access control of sensitive CBDC transaction data on the NPCI platform.",
+        "Test Data": "user_role: Auditor, transaction_id: Transaction ID from a previous test case, access_control_policy: Auditors can only view transaction details, not modify them.",
+        "Expected Result": "data_access_allowed: True, data_modification_allowed: False, audit_trail_generated: True"
+    },
+    {
+        "Test Case No": "TC010",
+        "Test Step": "TCTC010",
+        "Test Type": "Manual",
+        "Test Summary": "Simulate a network outage during a CBDC transaction and ensure proper handling.",
+        "Test Data": "sender_upi_id: user12@bankl, receiver_upi_id: user13@bankm, amount: 15.00, network_outage_simulation: Occurs after transaction initiation but before settlement",
+        "Expected Result": "transaction_status: Pending/In-Progress initially, then either Success or Failed with appropriate error message (e.g., TIMEOUT), sender_balance_eventual_state: Should reflect either a successful transfer or be reversed to the original balance., system_recovery_mechanism_activated: True"
+    }
+]

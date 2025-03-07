@@ -1,0 +1,42 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Step": "TCTC001",
+        "Test Type": "Manual",
+        "Test Summary": "Verify successful CBDC transfer between two wallets.",
+        "Test Data": "sender_wallet_id: SENDER123, recipient_wallet_id: RECIPIENT456, transfer_amount: 100, transaction_fee: 0.01, sender_initial_balance: 500, recipient_initial_balance: 200",
+        "Expected Result": "sender_final_balance: 399.99, recipient_final_balance: 300, transaction_status: SUCCESS, transaction_id: unique_transaction_id, transaction_timestamp: current_timestamp, log_entry: CBDC Transfer: Sender SENDER123 to Recipient RECIPIENT456, Amount: 100, Fee: 0.01, Status: SUCCESS"
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Step": "TCTC002",
+        "Test Type": "Manual",
+        "Test Summary": "Test insufficient balance scenario during CBDC transfer.",
+        "Test Data": "sender_wallet_id: SENDER789, recipient_wallet_id: RECIPIENT012, transfer_amount: 1000, transaction_fee: 0.01, sender_initial_balance: 100, recipient_initial_balance: 50",
+        "Expected Result": "sender_final_balance: 100, recipient_final_balance: 50, transaction_status: FAILED, transaction_id: null, error_message: Insufficient balance in sender wallet (SENDER789), log_entry: CBDC Transfer: Sender SENDER789 to Recipient RECIPIENT012, Amount: 1000, Fee: 0.01, Status: FAILED, Reason: Insufficient Balance"
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Step": "TCTC003",
+        "Test Type": "Manual",
+        "Test Summary": "Verify that transaction fees are correctly applied and accounted for.",
+        "Test Data": "sender_wallet_id: SENDER345, recipient_wallet_id: RECIPIENT678, transfer_amount: 50, transaction_fee: 0.05, sender_initial_balance: 200, recipient_initial_balance: 100, fee_collection_wallet: FEE_WALLET_ID, fee_wallet_initial_balance: 10",
+        "Expected Result": "sender_final_balance: 149.95, recipient_final_balance: 150, transaction_status: SUCCESS, transaction_id: unique_transaction_id, transaction_timestamp: current_timestamp, fee_wallet_final_balance: 10.05, log_entry: CBDC Transfer: Sender SENDER345 to Recipient RECIPIENT678, Amount: 50, Fee: 0.05, Status: SUCCESS, Fee collected in wallet FEE_WALLET_ID"
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Step": "TCTC004",
+        "Test Type": "Manual",
+        "Test Summary": "Test for duplicated transaction prevention. Attempt the same transfer multiple times.",
+        "Test Data": "sender_wallet_id: SENDER901, recipient_wallet_id: RECIPIENT234, transfer_amount: 25, transaction_fee: 0.01, sender_initial_balance: 75, recipient_initial_balance: 25, transaction_id: DUPLICATE_TXN_ID",
+        "Expected Result": "first_transaction: {'sender_final_balance': 49.99, 'recipient_final_balance': 50, 'transaction_status': 'SUCCESS', 'transaction_id': 'DUPLICATE_TXN_ID'}, subsequent_transactions: {'sender_final_balance': 49.99, 'recipient_final_balance': 50, 'transaction_status': 'FAILED', 'error_message': 'Duplicate transaction ID (DUPLICATE_TXN_ID)', 'log_entry': 'CBDC Transfer: Sender SENDER901 to Recipient RECIPIENT234, Amount: 25, Fee: 0.01, Status: FAILED, Reason: Duplicate Transaction'}"
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Step": "TCTC005",
+        "Test Type": "Manual",
+        "Test Summary": "Simulate a network outage during a CBDC transfer and verify transaction atomicity.",
+        "Test Data": "sender_wallet_id: SENDER567, recipient_wallet_id: RECIPIENT890, transfer_amount: 75, transaction_fee: 0.02, sender_initial_balance: 300, recipient_initial_balance: 150, network_interruption_point: after sender balance deduction, before recipient balance addition",
+        "Expected Result": "sender_final_balance: 300, recipient_final_balance: 150, transaction_status: FAILED, error_message: Transaction Rollback due to Network Interruption, log_entry: CBDC Transfer: Sender SENDER567 to Recipient RECIPIENT890, Amount: 75, Fee: 0.02, Status: FAILED, Reason: Network Interruption, Transaction Rolled Back"
+    }
+]

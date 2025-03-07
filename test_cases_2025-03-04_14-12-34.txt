@@ -1,0 +1,44 @@
+Here are 5 test cases for a BBPS (Bharat Bill Payment System) product, focusing on different aspects of a typical bill payment flow:
+
+**Test Case 1: Successful Bill Payment with Valid Data**
+
+* **Objective:** Verify successful bill payment with valid customer and biller details.
+* **Input:** Valid biller ID, customer account number, payment amount, payment method (e.g., card, net banking).
+* **Expected Result:**  Successful payment confirmation with transaction ID, payment date and time, and updated account balance (if applicable).  Confirmation message displayed to the user.  Payment status reflected correctly in transaction history.
+* **Pre-conditions:** User logged in, sufficient balance in payment method.
+* **Post-conditions:** Bill payment reflected on the biller's side.
+
+**Test Case 2: Bill Payment with Insufficient Funds**
+
+* **Objective:** Verify system behavior when attempting payment with insufficient funds.
+* **Input:** Valid biller ID, customer account number, payment amount exceeding available balance, payment method.
+* **Expected Result:**  Clear error message indicating insufficient funds. Payment transaction should be declined. No changes to account balance. Transaction should be logged with appropriate failure status.
+* **Pre-conditions:** User logged in.
+* **Post-conditions:** No changes to bill status.
+
+**Test Case 3: Bill Payment with Invalid Biller ID**
+
+* **Objective:** Verify system handles incorrect biller information gracefully.
+* **Input:** Invalid or non-existent biller ID, valid customer account number, payment amount, payment method.
+* **Expected Result:** Clear error message indicating invalid biller ID. Payment transaction should be declined. No deductions from the user's account.
+* **Pre-conditions:** User logged in.
+* **Post-conditions:** No changes to any accounts.
+
+**Test Case 4: Bill Payment Interruption (Network Failure)**
+
+* **Objective:** Verify system behavior when a network interruption occurs during payment processing.
+* **Input:** Valid biller ID, customer account number, payment amount, payment method. Simulate network disconnect during transaction processing.
+* **Expected Result:** System should handle the interruption gracefully.  Appropriate error message displayed to the user. No duplicate transactions.  Upon network restoration, the system should allow the user to retry the payment or verify payment status. Transaction log should reflect the interruption.
+* **Pre-conditions:** User logged in, stable internet connection initially.
+* **Post-conditions:** No incorrect deductions from the user's account.  Bill status remains unchanged if payment was unsuccessful.
+
+**Test Case 5:  Bill Payment with Expired Bill/Due Date Passed**
+
+* **Objective:**  Verify system behavior when attempting payment for an expired bill.
+* **Input:** Valid biller ID, customer account number, payment amount, payment method.  Bill due date in the past.
+* **Expected Result:** System should either reject the payment with a clear message about the expired due date, or if late payment is allowed, appropriate late fees (if applicable) should be included in the payment amount or clearly indicated to the user.
+* **Pre-conditions:** User logged in.
+* **Post-conditions:**  If payment is successful, the bill should be marked as paid, even if late.  If rejected, the bill should remain unpaid.
+
+
+These test cases cover common scenarios and potential issues during a BBPS transaction. Remember to adapt these test cases based on the specific features and requirements of your BBPS product.  Consider adding more test cases to cover boundary conditions, security aspects, and different payment methods.

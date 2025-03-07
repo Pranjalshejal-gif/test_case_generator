@@ -1,0 +1,61 @@
+## 40 Test Cases for CBDC
+
+These test cases cover various aspects of CBDC, including functionality, security, accessibility, performance, and policy.
+
+**Functionality & Core Features:**
+
+1.  **Offline Transactions:** Verify transactions can be processed without internet connectivity.
+2.  **Online Transactions:** Verify standard online transactions function correctly.
+3.  **Micropayments:** Test processing of very small transactions efficiently.
+4.  **Large Value Transactions:** Test processing of high-value transactions without delays or errors.
+5.  **Transaction Speed:** Measure transaction processing speed under different network loads.
+6.  **Transaction Fees:** Verify correct application and collection of transaction fees (if applicable).
+7.  **Account Creation:** Test the process of creating new CBDC wallets/accounts.
+8.  **Account Closure:** Test the process of closing CBDC wallets/accounts.
+9.  **Balance Inquiry:** Verify users can check their CBDC balance accurately.
+10. **Statement Generation:** Ensure users can generate account statements for a specific period.
+11. **Interoperability with existing systems:** Test seamless integration with existing banking infrastructure.
+12. **Cross-border transactions:**  Verify CBDC transactions can be processed across borders.
+13. **Programmability:** Test the implementation and execution of smart contracts within the CBDC system.
+
+**Security & Privacy:**
+
+14. **Authorization and Authentication:** Verify robust user authentication and transaction authorization mechanisms.
+15. **KYC/AML Compliance:** Test adherence to Know Your Customer and Anti-Money Laundering regulations.
+16. **Data Privacy:** Ensure user transaction data is protected and privacy regulations are met.
+17. **Resilience to Cyberattacks:** Test the system's resistance to various cyber threats (e.g., DDoS, hacking).
+18. **Quantum Resistance:** Evaluate the CBDC's cryptographic security against future quantum computing attacks.
+19. **Key Management:** Test the security and reliability of private key management for users.
+20. **Recovery of Lost Funds:** Test procedures for recovering lost funds due to lost keys or compromised devices.
+
+**Accessibility & Usability:**
+
+21. **Accessibility for Disabled Users:** Ensure the CBDC platform is accessible to users with disabilities.
+22. **User Interface (UI) Testing:**  Evaluate the usability and intuitiveness of the user interface.
+23. **Mobile App Functionality:** Test the functionality and performance of mobile CBDC wallets.
+24. **Multilingual Support:** Verify support for multiple languages in the user interface.
+25. **Financial Literacy Integration:** Test the integration of educational resources on CBDC usage.
+
+**Performance & Scalability:**
+
+26. **Load Testing:** Test the system's performance under high transaction volumes.
+27. **Stress Testing:** Push the system to its limits to identify breaking points.
+28. **Network Latency:** Measure network delays and their impact on transaction processing.
+29. **Scalability:** Assess the system's ability to handle increasing numbers of users and transactions.
+
+**Policy & Regulation:**
+
+30. **Monetary Policy Implementation:** Test how CBDC impacts and facilitates monetary policy execution.
+31. **Regulatory Compliance:** Verify adherence to relevant financial regulations and reporting requirements.
+32. **Privacy Regulations Compliance:** Ensure compliance with data privacy laws and regulations.
+33. **Tax Implications:** Test the integration of CBDC transactions with existing tax systems.
+34. **Sanctions Compliance:** Verify the ability to enforce sanctions using the CBDC system.
+
+**Edge Cases & Negative Testing:**
+
+35. **Negative Balance:** Attempt to process a transaction that would result in a negative balance.
+36. **Invalid Transaction Data:** Test handling of transactions with incorrect or incomplete data.
+37. **Network Interruptions:** Simulate network disruptions and test system recovery.
+38. **Power Outages:** Test the system's resilience to power failures.
+39. **Duplicate Transactions:** Attempt to process the same transaction multiple times.
+40. **Expired Transactions:**  Test handling of transactions that exceed a predefined time limit.

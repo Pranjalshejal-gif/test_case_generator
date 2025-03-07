@@ -1,0 +1,42 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Step": "TCTC001",
+        "Test Type": "Manual",
+        "Test Summary": "Successful UPI Payment Initiation and Completion",
+        "Test Data": "payer_vpa: payer@ybl, payee_vpa: payee@apl, amount: 10.0, payer_pin: 123456, transaction_id: TXN1234567890, transaction_note: Test payment, device_id: ABCDEFG12345",
+        "Expected Result": "status: SUCCESS, transaction_id: TXN1234567890, response_code: 00, response_message: Transaction successful, utrn: UTR123456789012345"
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Step": "TCTC002",
+        "Test Type": "Manual",
+        "Test Summary": "UPI Payment Rejection due to Insufficient Funds",
+        "Test Data": "payer_vpa: payer@ybl, payee_vpa: payee@apl, amount: 1000.0, payer_pin: 123456, transaction_id: TXN0987654321, transaction_note: Test payment - insufficient funds, device_id: HIJKLMN67890",
+        "Expected Result": "status: FAILURE, transaction_id: TXN0987654321, response_code: 05, response_message: Insufficient Funds, utrn: None"
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Step": "TCTC003",
+        "Test Type": "Manual",
+        "Test Summary": "Invalid Payer VPA Format",
+        "Test Data": "payer_vpa: invalid_vpa, payee_vpa: payee@apl, amount: 5.0, payer_pin: 123456, transaction_id: TXN5432109876, transaction_note: Test payment - invalid payer VPA, device_id: OPQRSTU01234",
+        "Expected Result": "status: FAILURE, transaction_id: TXN5432109876, response_code: 12, response_message: Invalid Payer VPA format, utrn: None"
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Step": "TCTC004",
+        "Test Type": "Manual",
+        "Test Summary": "Incorrect Payer PIN entered",
+        "Test Data": "payer_vpa: payer@ybl, payee_vpa: payee@apl, amount: 20.0, payer_pin: wrongpin, transaction_id: TXN6789012345, transaction_note: Test payment - incorrect PIN, device_id: VWXYZAB56789",
+        "Expected Result": "status: FAILURE, transaction_id: TXN6789012345, response_code: 91, response_message: Invalid PIN, utrn: None"
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Step": "TCTC005",
+        "Test Type": "Manual",
+        "Test Summary": "Timeout during transaction processing",
+        "Test Data": "payer_vpa: payer@ybl, payee_vpa: payee@apl, amount: 15.0, payer_pin: 123456, transaction_id: TXN2345678901, transaction_note: Test payment - timeout simulation, device_id: CDEFGHIJ90123",
+        "Expected Result": "status: PENDING, transaction_id: TXN2345678901, response_code: 25, response_message: Transaction timed out. Please check transaction status., utrn: None"
+    }
+]

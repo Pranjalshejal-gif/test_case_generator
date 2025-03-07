@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Case Generator</title>
+</head>
+
+<body>
+    <h1>Generate Test Cases</h1>
+    <form id="testCaseForm">
+        <label for="topic">Enter Test Scenario:</label>
+        <input type="text" id="topic" name="topic" required>
+
+        <label for="num_cases">Number of Test Cases:</label>
+        <input type="number" id="num_cases" name="num_cases" value="5" min="1">
+
+        <button type="submit">Generate CSV</button>
+    </form>
+
+    <script>
+        document.getElementById("testCaseForm").onsubmit = async function (event) {
+            event.preventDefault();
+            const topic = document.getElementById("topic").value;
+            const num_cases = document.getElementById("num_cases").value;
+
+            const response = await fetch("/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ topic, num_cases })
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "test_cases.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                alert("Error generating test cases. Please try again.");
+            }
+        };
+    </script>
+</body>
+
+</html>

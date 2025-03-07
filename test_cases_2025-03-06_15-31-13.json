@@ -1,0 +1,37 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Case ID": "TCTC001",
+        "Test Scenario": "CBDC Redemption to Commercial Bank Account",
+        "Test Data": "cbdc_amount: 100.0, redemption_account: 1234567890, redemption_bank_code: ROUTING123, user_id: user123, transaction_timestamp: 2024-10-27T10:00:00Z",
+        "Expected Result": "redemption_successful: True, account_balance_decrease: 100.0, bank_account_balance_increase: 100.0, transaction_id: TXN-CBDC-12345, status_code: 200, audit_log: CBDC redemption of 100.00 to account 1234567890 successful.  Transaction ID: TXN-CBDC-12345"
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Case ID": "TCTC002",
+        "Test Scenario": "CBDC Purchase with Insufficient Balance",
+        "Test Data": "cbdc_amount: 50.0, user_id: user456, merchant_id: merchant789, available_balance: 25.0, transaction_timestamp: 2024-10-27T11:00:00Z",
+        "Expected Result": "purchase_successful: False, error_message: Insufficient CBDC balance, status_code: 400, audit_log: CBDC purchase of 50.00 from merchant789 failed due to insufficient balance. User ID: user456. Available balance: 25.00, available_balance: 25.0"
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Case ID": "TCTC003",
+        "Test Scenario": "CBDC Transfer Between Users",
+        "Test Data": "sender_id: user789, recipient_id: user101, cbdc_amount: 25.0, sender_available_balance: 100.0, recipient_initial_balance: 50.0, transaction_timestamp: 2024-10-27T12:00:00Z",
+        "Expected Result": "transfer_successful: True, sender_account_balance_decrease: 25.0, recipient_account_balance_increase: 25.0, sender_available_balance: 75.0, recipient_final_balance: 75.0, transaction_id: TXN-CBDC-67890, status_code: 200, audit_log: CBDC transfer of 25.00 from user789 to user101 successful. Transaction ID: TXN-CBDC-67890"
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Case ID": "TCTC004",
+        "Test Scenario": "CBDC Purchase with Invalid Merchant ID",
+        "Test Data": "cbdc_amount: 10.0, user_id: user222, merchant_id: invalidMerchantID, user_available_balance: 20.0, transaction_timestamp: 2024-10-27T13:00:00Z",
+        "Expected Result": "purchase_successful: False, error_message: Invalid Merchant ID, status_code: 404, audit_log: CBDC purchase of 10.00 failed. Invalid Merchant ID: invalidMerchantID. User ID: user222, user_available_balance: 20.0"
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Case ID": "TCTC005",
+        "Test Scenario": "CBDC Redemption Attempt Exceeding Daily Limit",
+        "Test Data": "cbdc_amount: 6000.0, redemption_account: 9876543210, redemption_bank_code: ROUTING456, user_id: user333, daily_redemption_limit: 5000.0, transaction_timestamp: 2024-10-27T14:00:00Z, previous_redemptions_today: 0.0",
+        "Expected Result": "redemption_successful: False, error_message: Redemption amount exceeds daily limit, status_code: 403, audit_log: CBDC redemption of 6000.00 to account 9876543210 failed. Exceeds daily limit of 5000.00. User ID: user333, available_balance: None"
+    }
+]

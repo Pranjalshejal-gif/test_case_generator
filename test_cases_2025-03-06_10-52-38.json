@@ -1,0 +1,36 @@
+[
+    {
+        "Test Case No": "TC_BBPS_001",
+        "Test Case ID": "TCTC_BBPS_001",
+        "Test Scenario": "Successful Bill Payment - Electricity Bill",
+        "Test Data": {
+            "billerId": "POWERCO_ELECTRICITY",
+            "customerMobileNumber": "9876543210",
+            "customerDetails": {
+                "accountNumber": "1234567890",
+                "billingUnit": "Zone A"
+            },
+            "amount": "1500.00",
+            "paymentMode": "UPI",
+            "payerDetails": {
+                "name": "John Doe",
+                "mobileNumber": "9876543210",
+                "email": "john.doe@example.com"
+            },
+            "transactionReferenceId": "TXN_20240126_001"
+        },
+        "Expected Result": {
+            "status": "SUCCESS",
+            "transactionId": "BBPS_TXN_20240126_001",
+            "billerTransactionId": "POWERCO_TXN_12345",
+            "responseCode": "00",
+            "responseMessage": "Payment successful",
+            "transactionDateTime": "2024-01-26T10:00:00Z",
+            "billerResponse": {
+                "receiptNumber": "RCPT_123456",
+                "dueDate": "2024-02-25"
+            }
+        },
+        "Status": "Pending"
+    }
+]
