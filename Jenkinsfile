@@ -11,7 +11,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 // Clone the repository that contains the Flask app and Jenkinsfile
-                git 'https://github.com/Pranjalshejal-gif/test_creation.git'  // Replace with your GitHub repo URL
+                git 'https://github.com/Pranjalshejal-gif/test_case_generator.git'  // Replace with your GitHub repo URL
             }
         }
 
