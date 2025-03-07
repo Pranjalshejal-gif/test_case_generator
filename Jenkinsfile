@@ -9,7 +9,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 // Clone the repository that contains the Flask app and Jenkinsfile
-                git branch: 'main', url: 'https://github.com/Pranjalshejal-gif/test_case_generator.git' // Specify the branch
+                git branch: 'main', url: 'https://github.com/Pranjalshejal-gif/test_case_generator.git'
             }
         }
 
@@ -30,6 +30,11 @@ pipeline {
                     def currentTime = new Date().format("yyyy-MM-dd_HH-mm-ss")
                     env.CSV_FILE = "test_cases_${currentTime}.csv"
                     echo "Generated CSV file name: ${env.CSV_FILE}"
+
+                    // Ensure the file is created before proceeding
+                    if (!fileExists("${env.CSV_FILE}")) {
+                        error "CSV file was not created."
+                    }
                 }
             }
         }
@@ -47,6 +52,11 @@ pipeline {
                             returnStdout: true
                         ).trim()
                         echo "Response from Jira: ${response}"
+
+                        // Handle response (if needed)
+                        if (response.contains("error")) {
+                            error "Failed to upload to Jira: ${response}"
+                        }
                     }
                 }
             }
