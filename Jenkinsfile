@@ -52,7 +52,7 @@ pipeline {
             }
         }
 
-         stages {
+        
         stage('Parse JSON and Upload to Jira') {
             steps {
                 script {
