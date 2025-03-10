@@ -35,7 +35,7 @@ pipeline {
                     echo "Flask API Response: ${response}"
 
                     try {
-                        // Assuming response is valid JSON, you can parse it directly
+                        // Parse the response JSON
                         def jsonResponse = readJSON text: response
                         
                         // Check if the response is an array and extract the test case information
