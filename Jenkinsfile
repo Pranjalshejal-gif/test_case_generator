@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/2/issue/bulk'  // Bulk issue creation URL
+        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'  // Correct Jira Xray URL for test case upload
     }
 
     stages {
@@ -51,39 +51,24 @@ pipeline {
             }
         }
 
-        stage('Upload to Jira (Bulk Issue Creation)') {
+        stage('Upload to Jira Xray') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
-                        // Prepare the bulk create issues JSON payload
-                        def jsonPayload = """
-                        {
-                          "issueUpdates": [
-                            {
-                              "fields": {
-                                "project": { "key": "YOUR_PROJECT_KEY" },
-                                "summary": "Test case summary from CSV",
-                                "description": "Test case description from CSV",
-                                "issuetype": { "name": "Task" }
-                              }
-                            }
-                          ]
-                        }
-                        """
                         def response = sh(
                             script: """
-                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: application/json" \
-                            -d '${jsonPayload}' "${JIRA_URL}"
+                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
+                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
                             """,
                             returnStdout: true
                         ).trim()
                         echo "Response from Jira: ${response}"
 
-                        // Log the response but do not fail the pipeline
+                        // Check if the response indicates success or failure
                         if (response.contains("error")) {
-                            echo "Failed to create issues in Jira: ${response}"
+                            echo "Failed to upload to Jira Xray: ${response}"
                         } else {
-                            echo "Issues successfully created in Jira."
+                            echo "Test cases successfully uploaded to Jira Xray."
                         }
                     }
                 }
