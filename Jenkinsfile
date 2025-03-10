@@ -38,15 +38,23 @@ pipeline {
                         // Parse the response JSON
                         def jsonResponse = readJSON text: response
                         
-                        // Check if the json_payload exists and parse it
-                        if (jsonResponse?.json_payload?.issueUpdates) {
-                            def jsonPayload = jsonResponse.json_payload.issueUpdates.collect { it.fields.description }.join("\n\n")
-                            // Save the JSON payload for debugging
-                            env.JSON_PAYLOAD = jsonPayload
+                        // Check if the response is an array and extract the test case information
+                        if (jsonResponse instanceof List) {
+                            def testCaseDescriptions = jsonResponse.collect { testCase ->
+                                return """
+                                Test Case Name: ${testCase."Test Case Name"}
+                                Action: ${testCase.Action}
+                                Test Data: ${testCase."Test Data"}
+                                Expected Result: ${testCase."Expected Result"}
+                                """
+                            }.join("\n\n")
+
+                            // Save the test case descriptions for debugging
+                            env.JSON_PAYLOAD = testCaseDescriptions
                             writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
                             echo "JSON Payload successfully extracted."
                         } else {
-                            error "Error: No issueUpdates found in the response."
+                            error "Error: Expected an array in the response but got ${jsonResponse.getClass().getName()}"
                         }
                     } catch (Exception e) {
                         error "Error parsing Flask API response: ${e.getMessage()}"
