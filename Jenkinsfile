@@ -46,7 +46,7 @@ pipeline {
                     }
 
                     // Stop Flask server
-                    sh "pkill -f app.py"
+                    // sh "pkill -f app.py"
                 }
             }
         }
