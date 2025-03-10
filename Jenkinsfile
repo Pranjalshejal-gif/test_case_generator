@@ -83,12 +83,14 @@ pipeline {
 
     }
 
-    post {
+   post {
         success {
             echo 'Pipeline executed successfully!'
         }
         failure {
             echo 'Pipeline failed! Check logs for issues.'
+            // Optionally, you can display the JMeter log here for further debugging in case of failure
+            sh "tail -n 50 jmeter.log"
         }
     }
 }
