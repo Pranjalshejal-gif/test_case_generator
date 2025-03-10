@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
 import json
 import re
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -24,7 +23,7 @@ def generate_test_cases(prompt, num_cases=5):
         - The test case number.
 
         Format the response as a JSON array of test cases, where each test case is a JSON object with keys:
-        "Test Summary", "data", "expected", "number".
+        "Test Case Name", "Test Data", "Expected Result", "Test Case ID", "Action".
         """
         response = model.generate_content(detailed_prompt)
         return response.text if response and response.text else "No response received."
@@ -49,8 +48,8 @@ def parse_test_cases(ai_output):
                 test_case = {
                     "fields": {
                         "project": { "key": "IMP" },
-                        "summary": f"AI Test Case {case['number']}",
-                        "description": f"Test {case['number']}",
+                        "summary": f"Test Case: {case['Test Case Name']}",
+                        "description": f"Test Case ID: {case['Test Case ID']}\nTest Data: {json.dumps(case['Test Data'], indent=2)}\nAction: {case['Action']}\nExpected Result: {case['Expected Result']}",
                         "issuetype": { "name": "Test" }
                     }
                 }
