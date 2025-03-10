@@ -62,30 +62,37 @@ pipeline {
         }
 
         stage('Run JMeter Test') {
-    steps {
-        script {
-            // Verify the modified JMX file exists
-            if (fileExists(env.MODIFIED_JMX_FILE)) {
-                // Execute JMeter with the modified test plan using 'java -jar' command
-                echo "Executing JMeter test..."
-                sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
+            steps {
+                script {
+                    // Verify the modified JMX file exists
+                    if (fileExists(env.MODIFIED_JMX_FILE)) {
+                        // Execute JMeter with the modified test plan using 'java -jar' command
+                        echo "Executing JMeter test..."
+                        sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
 
-                echo "JMeter test completed. Check results.jtl for details."
-                 echo "Displaying JMeter logs..."
+                        echo "JMeter test completed. Check results.jtl for details."
+                        echo "Displaying JMeter logs..."
                         sh "tail -n 20 jmeter.log"
-            } else {
-                error "Modified JMX file not found!"
+                    } else {
+                        error "Modified JMX file not found!"
+                    }
+                }
+            }
+        }
+
+        stage('Save Modified JMX File') {
+            steps {
+                script {
+                    // Save the modified JMX file as an artifact to the Jenkins workspace
+                    archiveArtifacts artifacts: "${env.MODIFIED_JMX_FILE}", allowEmptyArchive: true
+                    
+                    echo "Modified JMX file saved in workspace."
+                }
             }
         }
     }
-}
 
-
- 
-
-    }
-
-   post {
+    post {
         success {
             echo 'Pipeline executed successfully!'
         }
