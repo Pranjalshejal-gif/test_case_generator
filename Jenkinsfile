@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/apache-jmeter-5.6.3'  
-        JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents/AI1.jmx'  // Path to the original JMX file (you provide)
+        JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents/AI1.jmx'  // Path to the original JMX file
         MODIFIED_JMX_FILE = 'modified_test_case_plan.jmx'  // Path to store modified JMX file
     }
 
@@ -84,7 +84,7 @@ pipeline {
             steps {
                 script {
                     // Save the modified JMX file as an artifact to the Jenkins workspace
-                    archiveArtifacts artifacts: "${env.MODIFIED_JMX_FILE}", allowEmptyArchive: true
+                    archiveArtifacts artifacts: env.MODIFIED_JMX_FILE, allowEmptyArchive: true
                     
                     echo "Modified JMX file saved in workspace."
                 }
