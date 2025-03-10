@@ -51,27 +51,49 @@ pipeline {
             }
         }
 
-        stage('Upload to Jira Xray') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
-                        def response = sh(
-                            script: """
-                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
-                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
-                            """,
-                            returnStdout: true
-                        ).trim()
-                        echo "Response from Jira: ${response}"
+        // stage('Upload to Jira Xray') {
+        //     steps {
+        //         script {
+        //             withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
+        //                 def response = sh(
+        //                     script: """
+        //                     curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
+        //                     -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
+        //                     """,
+        //                     returnStdout: true
+        //                 ).trim()
+        //                 echo "Response from Jira: ${response}"
 
-                        // Log the response but do not fail the pipeline
-                        if (response.contains("error")) {
-                            echo "Failed to upload to Jira, but proceeding: ${response}"
-                        }
-                    }
+        //                 // Log the response but do not fail the pipeline
+        //                 if (response.contains("error")) {
+        //                     echo "Failed to upload to Jira, but proceeding: ${response}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        stage('Upload to Jira Xray') {
+    steps {
+        script {
+            withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
+                def response = sh(
+                    script: """
+                    curl -u \$JIRA_USER:\$JIRA_PASSWORD -X POST -H "Content-Type: multipart/form-data" \
+                    -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
+                    """,
+                    returnStdout: true
+                ).trim()
+                echo "Response from Jira: ${response}"
+
+                // Log the response but do not fail the pipeline
+                if (response.contains("error")) {
+                    echo "Failed to upload to Jira, but proceeding: ${response}"
                 }
             }
         }
+    }
+}
+
     }
 
     post {
