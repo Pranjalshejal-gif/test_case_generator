@@ -46,13 +46,12 @@ pipeline {
                         env.CSV_FILE = responseFile
                     }
 
-                    // Stop Flask server
+                    // Optionally stop Flask server (if needed)
                     // sh "pkill -f app.py"
                 }
             }
         }
 
-        
         stage('Parse JSON and Upload to Jira') {
             steps {
                 script {
@@ -110,4 +109,3 @@ pipeline {
         }
     }
 }
-
