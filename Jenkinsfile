@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'
+        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/2/issue/bulk'
     }
 
     stages {
