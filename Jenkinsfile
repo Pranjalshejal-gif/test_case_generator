@@ -70,29 +70,29 @@ pipeline {
             }
         }
 
-        stage('Upload to Jira Xray') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
-                        def response = sh(
-                            script: """
-                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: application/json" \
-                            -d '${env.JSON_PAYLOAD}' "${JIRA_URL}"
-                            """,
-                            returnStdout: true
-                        ).trim()
-                        echo "Response from Jira: ${response}"
+        // stage('Upload to Jira Xray') {
+        //     steps {
+        //         script {
+        //             withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
+        //                 def response = sh(
+        //                     script: """
+        //                     curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: application/json" \
+        //                     -d '${env.JSON_PAYLOAD}' "${JIRA_URL}"
+        //                     """,
+        //                     returnStdout: true
+        //                 ).trim()
+        //                 echo "Response from Jira: ${response}"
 
-                        // Check if the response indicates success or failure
-                        if (response.contains("error")) {
-                            echo "Failed to upload to Jira Xray: ${response}"
-                        } else {
-                            echo "Test cases successfully uploaded to Jira Xray."
-                        }
-                    }
-                }
-            }
-        }
+        //                 // Check if the response indicates success or failure
+        //                 if (response.contains("error")) {
+        //                     echo "Failed to upload to Jira Xray: ${response}"
+        //                 } else {
+        //                     echo "Test cases successfully uploaded to Jira Xray."
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     post {
