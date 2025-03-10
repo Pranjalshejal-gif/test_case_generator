@@ -4,7 +4,7 @@ pipeline {
     environment {
         JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/apache-jmeter-5.6.3'
         JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents/AI1.jmx'  // Path to the original JMX file
-        MODIFIED_JMX_FILE = 'modified_test_case_plan.jmx'  // Path to store modified JMX file
+        MODIFIED_JMX_FILE = 'modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx'  // Path to store modified JMX file with timestamp
     }
 
     stages {
@@ -85,9 +85,10 @@ pipeline {
                         def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
                             '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
                         
-                        // Write the modified JMX file
-                        writeFile file: env.MODIFIED_JMX_FILE, text: modifiedJmxContent
-                        echo "JMX file updated with JSON payload."
+                        // Write the modified JMX file with the current timestamp in its name
+                        def timestampedJmxFile = "modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx"
+                        writeFile file: timestampedJmxFile, text: modifiedJmxContent
+                        echo "JMX file updated with JSON payload and saved as ${timestampedJmxFile}."
                     } else {
                         error "Error: JSON payload is empty. Cannot modify JMX file."
                     }
@@ -99,10 +100,11 @@ pipeline {
             steps {
                 script {
                     // Verify the modified JMX file exists
-                    if (fileExists(env.MODIFIED_JMX_FILE)) {
+                    def timestampedJmxFile = "modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx"
+                    if (fileExists(timestampedJmxFile)) {
                         // Execute JMeter with the modified test plan using 'java -jar' command
                         echo "Executing JMeter test..."
-                        sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
+                        sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${timestampedJmxFile}\" -l results.jtl"
                         echo "JMeter test completed. Check results.jtl for details."
                         echo "Displaying JMeter logs..."
                         sh "tail -n 20 jmeter.log"
@@ -117,7 +119,8 @@ pipeline {
             steps {
                 script {
                     // Save the modified JMX file as an artifact to the Jenkins workspace
-                    archiveArtifacts artifacts: env.MODIFIED_JMX_FILE, allowEmptyArchive: true
+                    def timestampedJmxFile = "modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx"
+                    archiveArtifacts artifacts: timestampedJmxFile, allowEmptyArchive: true
                     echo "Modified JMX file saved in workspace."
                 }
             }
