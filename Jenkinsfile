@@ -51,14 +51,48 @@ pipeline {
             }
         }
 
+        stage('Generate JSON Payload') {
+            steps {
+                script {
+                    def testCasesJson = []
+                    def csvFile = readFile("${env.CSV_FILE}")
+                    def lines = csvFile.split("\n")
+                    
+                    // Loop through CSV lines and create JSON objects
+                    lines.eachWithIndex { line, index ->
+                        // Assuming CSV format: summary, description
+                        if (index > 0 && line.trim()) {  // Skip header and empty lines
+                            def columns = line.split(",")
+                            def summary = columns[0].trim()
+                            def description = columns[1].trim()
+                            
+                            def testCase = [
+                                "fields": [
+                                    "project": [ "key": "IMP" ],  // Adjust project key if needed
+                                    "summary": summary,
+                                    "description": description,
+                                    "issuetype": [ "name": "Test" ]
+                                ]
+                            ]
+                            testCasesJson.add(testCase)
+                        }
+                    }
+
+                    // Store the generated JSON in a variable
+                    env.JSON_PAYLOAD = JsonOutput.toJson([ "issueUpdates": testCasesJson ])
+                    echo "Generated JSON Payload: ${env.JSON_PAYLOAD}"
+                }
+            }
+        }
+
         stage('Upload to Jira Xray') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
                         def response = sh(
                             script: """
-                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
-                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
+                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: application/json" \
+                            -d '${env.JSON_PAYLOAD}' "${JIRA_URL}"
                             """,
                             returnStdout: true
                         ).trim()
