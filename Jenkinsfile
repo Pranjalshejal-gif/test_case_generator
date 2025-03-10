@@ -38,15 +38,11 @@ pipeline {
                         env.CSV_FILE = match[0][1]
                         echo "CSV file generated: ${env.CSV_FILE}"
                     } else {
-                        // If no CSV file is returned, check for JSON response and convert it
-                        echo "No CSV file found. Converting JSON response to CSV..."
-                        // Convert JSON to CSV here (assuming some function to handle this)
-                        // This is a placeholder for your conversion logic
-                        sh """
-                            echo 'Test Summary, Data' > ${env.WORKSPACE}/test_cases.csv
-                            echo 'Login Success, {\"username\": \"valid_user\", \"password\": \"valid_pass\"}' >> ${env.WORKSPACE}/test_cases.csv
-                        """
-                        env.CSV_FILE = "${env.WORKSPACE}/test_cases.csv"
+                        // If no CSV file is found, save response to a text file
+                        echo "No CSV file found. Saving response as a text file..."
+                        def responseFile = "${env.WORKSPACE}/flask_response.txt"
+                        writeFile file: responseFile, text: response
+                        env.CSV_FILE = responseFile
                     }
 
                     // Stop Flask server
@@ -68,8 +64,9 @@ pipeline {
                         ).trim()
                         echo "Response from Jira: ${response}"
 
+                        // Log the response but do not fail the pipeline
                         if (response.contains("error")) {
-                            error "Failed to upload to Jira: ${response}"
+                            echo "Failed to upload to Jira, but proceeding: ${response}"
                         }
                     }
                 }

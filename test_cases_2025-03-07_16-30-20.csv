@@ -1,0 +1,6 @@
+Test Case No,Test Step,Test Type,Test Summary,Test Data,Expected Result
+TC_LOGIN_001,TC_LOGIN_001,Manual,Valid Login with Correct Credentials,"username: valid_user, password: ValidPassword123!","result: Login successful., redirect_url: /home, session_created: True, error_message: None"
+TC_LOGIN_002,TC_LOGIN_002,Manual,Invalid Login with Incorrect Password,"username: valid_user, password: incorrectPassword","result: Login failed., redirect_url: None, session_created: False, error_message: Invalid username or password."
+TC_LOGIN_003,TC_LOGIN_003,Manual,Invalid Login with Incorrect Username,"username: invalid_user, password: ValidPassword123!","result: Login failed., redirect_url: None, session_created: False, error_message: Invalid username or password."
+TC_LOGIN_004,TC_LOGIN_004,Manual,Login with Empty Username and Password,"username: , password: ","result: Login failed., redirect_url: None, session_created: False, error_message: Username and password are required."
+TC_LOGIN_005,TC_LOGIN_005,Manual,Login with SQL Injection Attempt in Username,"username:  ' OR '1'='1 , password: ValidPassword123!","result: Login failed., redirect_url: None, session_created: False, error_message: Invalid username or password."

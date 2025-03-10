@@ -1,0 +1,42 @@
+[
+    {
+        "Test Case No": "TC001",
+        "Test Step": "TC001",
+        "Test Type": "Manual",
+        "Test Summary": "Successful UPI Transaction - User A to User B",
+        "Test Data": "payer_upi_id: userA@bank, payee_upi_id: userB@bank, amount: 10.00, transaction_pin: 123456, remarks: Test Payment",
+        "Expected Result": "status: SUCCESS, transaction_id: GeneratedTransactionID, payer_balance: CalculatedBalanceAfterDeduction, payee_balance: CalculatedBalanceAfterAddition, message: Payment of INR 10.00 to userB@bank successful."
+    },
+    {
+        "Test Case No": "TC002",
+        "Test Step": "TC002",
+        "Test Type": "Manual",
+        "Test Summary": "UPI Transaction Failure - Insufficient Balance",
+        "Test Data": "payer_upi_id: userC@bank, payee_upi_id: userD@bank, amount: 1000.00, transaction_pin: 654321, payer_balance: 500.00, remarks: Test Payment - Insufficient Funds",
+        "Expected Result": "status: FAILED, reason: Insufficient balance., payer_balance: 500.00, message: Transaction failed. Insufficient funds in your account."
+    },
+    {
+        "Test Case No": "TC003",
+        "Test Step": "TC003",
+        "Test Type": "Manual",
+        "Test Summary": "UPI Transaction Failure - Invalid Transaction PIN",
+        "Test Data": "payer_upi_id: userE@bank, payee_upi_id: userF@bank, amount: 5.00, transaction_pin: 111111, remarks: Test Payment - Invalid PIN",
+        "Expected Result": "status: FAILED, reason: Invalid Transaction PIN., message: Transaction failed. Invalid UPI PIN. Please try again."
+    },
+    {
+        "Test Case No": "TC004",
+        "Test Step": "TC004",
+        "Test Type": "Manual",
+        "Test Summary": "UPI Transaction Failure - Invalid Payee UPI ID",
+        "Test Data": "payer_upi_id: userG@bank, payee_upi_id: invalid_upi_id, amount: 20.00, transaction_pin: 987654, remarks: Test Payment - Invalid Payee",
+        "Expected Result": "status: FAILED, reason: Invalid Payee UPI ID., message: Transaction failed. The provided UPI ID is invalid."
+    },
+    {
+        "Test Case No": "TC005",
+        "Test Step": "TC005",
+        "Test Type": "Manual",
+        "Test Summary": "UPI Transaction - Request Money Feature",
+        "Test Data": "payer_upi_id: userH@bank, payee_upi_id: userI@bank, amount: 50.00, request_type: request_money, remarks: Requesting Money",
+        "Expected Result": "status: PENDING, request_id: GeneratedRequestID, message: Money request of INR 50.00 sent to userI@bank. Waiting for approval."
+    }
+]

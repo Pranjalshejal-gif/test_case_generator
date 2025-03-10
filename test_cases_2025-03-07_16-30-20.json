@@ -1,0 +1,42 @@
+[
+    {
+        "Test Case No": "TC_LOGIN_001",
+        "Test Step": "TC_LOGIN_001",
+        "Test Type": "Manual",
+        "Test Summary": "Valid Login with Correct Credentials",
+        "Test Data": "username: valid_user, password: ValidPassword123!",
+        "Expected Result": "result: Login successful., redirect_url: /home, session_created: True, error_message: None"
+    },
+    {
+        "Test Case No": "TC_LOGIN_002",
+        "Test Step": "TC_LOGIN_002",
+        "Test Type": "Manual",
+        "Test Summary": "Invalid Login with Incorrect Password",
+        "Test Data": "username: valid_user, password: incorrectPassword",
+        "Expected Result": "result: Login failed., redirect_url: None, session_created: False, error_message: Invalid username or password."
+    },
+    {
+        "Test Case No": "TC_LOGIN_003",
+        "Test Step": "TC_LOGIN_003",
+        "Test Type": "Manual",
+        "Test Summary": "Invalid Login with Incorrect Username",
+        "Test Data": "username: invalid_user, password: ValidPassword123!",
+        "Expected Result": "result: Login failed., redirect_url: None, session_created: False, error_message: Invalid username or password."
+    },
+    {
+        "Test Case No": "TC_LOGIN_004",
+        "Test Step": "TC_LOGIN_004",
+        "Test Type": "Manual",
+        "Test Summary": "Login with Empty Username and Password",
+        "Test Data": "username: , password: ",
+        "Expected Result": "result: Login failed., redirect_url: None, session_created: False, error_message: Username and password are required."
+    },
+    {
+        "Test Case No": "TC_LOGIN_005",
+        "Test Step": "TC_LOGIN_005",
+        "Test Type": "Manual",
+        "Test Summary": "Login with SQL Injection Attempt in Username",
+        "Test Data": "username:  ' OR '1'='1 , password: ValidPassword123!",
+        "Expected Result": "result: Login failed., redirect_url: None, session_created: False, error_message: Invalid username or password."
+    }
+]
