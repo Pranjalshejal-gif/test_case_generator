@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/apache-jmeter-5.6.3'  
+        JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/apache-jmeter-5.6.3'
         JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents/AI1.jmx'  // Path to the original JMX file
         MODIFIED_JMX_FILE = 'modified_test_case_plan.jmx'  // Path to store modified JMX file
     }
@@ -33,14 +33,24 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
-                    
-                    // Parse the response to extract the JSON payload
-                    def jsonResponse = readJSON text: response
-                    def jsonPayload = jsonResponse.json_payload.issueUpdates.collect { it.fields.description }.join("\n\n")
-                    
-                    // Save the JSON payload for debugging
-                    env.JSON_PAYLOAD = jsonPayload
-                    writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
+
+                    try {
+                        // Parse the response JSON
+                        def jsonResponse = readJSON text: response
+                        
+                        // Check if the json_payload exists and parse it
+                        if (jsonResponse?.json_payload?.issueUpdates) {
+                            def jsonPayload = jsonResponse.json_payload.issueUpdates.collect { it.fields.description }.join("\n\n")
+                            // Save the JSON payload for debugging
+                            env.JSON_PAYLOAD = jsonPayload
+                            writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
+                            echo "JSON Payload successfully extracted."
+                        } else {
+                            error "Error: No issueUpdates found in the response."
+                        }
+                    } catch (Exception e) {
+                        error "Error parsing Flask API response: ${e.getMessage()}"
+                    }
                 }
             }
         }
@@ -48,17 +58,21 @@ pipeline {
         stage('Modify JMX File with JSON Payload') {
             steps {
                 script {
-                    // Read the existing JMX file
-                    def jmxContent = readFile(env.JMX_FILE_PATH)
-                    
-                    // Replace request body with the extracted JSON payload
-                    def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
-                        '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
-                    
-                    // Write the modified JMX file
-                    writeFile file: env.MODIFIED_JMX_FILE, text: modifiedJmxContent
-                    
-                    echo "JMX file updated with JSON payload."
+                    // Ensure the JSON payload is not empty
+                    if (env.JSON_PAYLOAD?.trim()) {
+                        // Read the existing JMX file
+                        def jmxContent = readFile(env.JMX_FILE_PATH)
+
+                        // Replace request body with the extracted JSON payload
+                        def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
+                            '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
+                        
+                        // Write the modified JMX file
+                        writeFile file: env.MODIFIED_JMX_FILE, text: modifiedJmxContent
+                        echo "JMX file updated with JSON payload."
+                    } else {
+                        error "Error: JSON payload is empty. Cannot modify JMX file."
+                    }
                 }
             }
         }
@@ -71,7 +85,6 @@ pipeline {
                         // Execute JMeter with the modified test plan using 'java -jar' command
                         echo "Executing JMeter test..."
                         sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
-
                         echo "JMeter test completed. Check results.jtl for details."
                         echo "Displaying JMeter logs..."
                         sh "tail -n 20 jmeter.log"
@@ -87,7 +100,6 @@ pipeline {
                 script {
                     // Save the modified JMX file as an artifact to the Jenkins workspace
                     archiveArtifacts artifacts: env.MODIFIED_JMX_FILE, allowEmptyArchive: true
-                    
                     echo "Modified JMX file saved in workspace."
                 }
             }
