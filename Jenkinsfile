@@ -110,16 +110,9 @@ pipeline {
         stage('Save Modified JMX File') {
             steps {
                 script {
-                    // Get the current timestamp and append it to the filename
-                    def currentTime = new java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new java.util.Date())
-                    def timestampedJmxFile = "modified_test_case_plan_${currentTime}.jmx"
-
-                    // Save the modified JMX file with the current timestamp
-                    sh "cp ${env.MODIFIED_JMX_FILE} ${timestampedJmxFile}"
-
-                    // Archive the modified file with the timestamped name
-                    archiveArtifacts artifacts: timestampedJmxFile, allowEmptyArchive: true
-                    echo "Modified JMX file saved as ${timestampedJmxFile} in workspace."
+                    // Save the modified JMX file as an artifact to the Jenkins workspace
+                    archiveArtifacts artifacts: env.MODIFIED_JMX_FILE, allowEmptyArchive: true
+                    echo "Modified JMX file saved in workspace."
                 }
             }
         }
