@@ -68,7 +68,7 @@ pipeline {
             if (fileExists(env.MODIFIED_JMX_FILE)) {
                 // Execute JMeter with the modified test plan using 'java -jar' command
                 echo "Executing JMeter test..."
-                sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/apache-jmeter-5.6.3.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
+                sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
 
                 echo "JMeter test completed. Check results.jtl for details."
             } else {
