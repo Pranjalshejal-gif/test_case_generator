@@ -4,7 +4,6 @@ pipeline {
     environment {
         JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/apache-jmeter-5.6.3'
         JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents/AI1.jmx'  // Path to the original JMX file
-        MODIFIED_JMX_FILE = 'modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx'  // Path to store modified JMX file with timestamp
     }
 
     stages {
@@ -85,8 +84,11 @@ pipeline {
                         def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
                             '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
                         
+                        // Get the current timestamp and create a unique JMX file name
+                        def timestamp = new Date().format('yyyy-MM-dd_HH-mm-ss')
+                        def timestampedJmxFile = "modified_test_case_plan_${timestamp}.jmx"
+
                         // Write the modified JMX file with the current timestamp in its name
-                        def timestampedJmxFile = "modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx"
                         writeFile file: timestampedJmxFile, text: modifiedJmxContent
                         echo "JMX file updated with JSON payload and saved as ${timestampedJmxFile}."
                     } else {
@@ -99,8 +101,11 @@ pipeline {
         stage('Run JMeter Test') {
             steps {
                 script {
+                    // Get the current timestamp for the modified JMX file
+                    def timestamp = new Date().format('yyyy-MM-dd_HH-mm-ss')
+                    def timestampedJmxFile = "modified_test_case_plan_${timestamp}.jmx"
+
                     // Verify the modified JMX file exists
-                    def timestampedJmxFile = "modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx"
                     if (fileExists(timestampedJmxFile)) {
                         // Execute JMeter with the modified test plan using 'java -jar' command
                         echo "Executing JMeter test..."
@@ -118,8 +123,11 @@ pipeline {
         stage('Save Modified JMX File') {
             steps {
                 script {
+                    // Get the current timestamp for the modified JMX file
+                    def timestamp = new Date().format('yyyy-MM-dd_HH-mm-ss')
+                    def timestampedJmxFile = "modified_test_case_plan_${timestamp}.jmx"
+                    
                     // Save the modified JMX file as an artifact to the Jenkins workspace
-                    def timestampedJmxFile = "modified_test_case_plan_${new Date().format('yyyy-MM-dd_HH-mm-ss')}.jmx"
                     archiveArtifacts artifacts: timestampedJmxFile, allowEmptyArchive: true
                     echo "Modified JMX file saved in workspace."
                 }
