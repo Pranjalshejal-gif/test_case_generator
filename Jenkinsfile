@@ -34,10 +34,12 @@ pipeline {
                     ).trim()
                     echo "Flask API Response: ${response}"
                     
-                    // Store the JSON payload
-                    env.JSON_PAYLOAD = response
-
+                    // Parse the response to extract the JSON payload
+                    def jsonResponse = readJSON text: response
+                    def jsonPayload = jsonResponse.json_payload.issueUpdates.collect { it.fields.description }.join("\n\n")
+                    
                     // Save the JSON payload for debugging
+                    env.JSON_PAYLOAD = jsonPayload
                     writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
                 }
             }
@@ -49,7 +51,7 @@ pipeline {
                     // Read the existing JMX file
                     def jmxContent = readFile(env.JMX_FILE_PATH)
                     
-                    // Replace request body with generated JSON payload
+                    // Replace request body with the extracted JSON payload
                     def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
                         '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
                     
