@@ -35,12 +35,8 @@ pipeline {
                     echo "Flask API Response: ${response}"
 
                     try {
-                        // Extract the JSON part from the error field in the response
-                        def jsonString = response.replaceAll(/.*"error":\s*```json\n(.*?)```/, '$1').trim()
-                        echo "Extracted JSON: ${jsonString}"
-
-                        // Parse the extracted JSON string
-                        def jsonResponse = readJSON text: jsonString
+                        // Assuming response is valid JSON, you can parse it directly
+                        def jsonResponse = readJSON text: response
                         
                         // Check if the response is an array and extract the test case information
                         if (jsonResponse instanceof List) {
