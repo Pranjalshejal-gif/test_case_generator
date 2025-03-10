@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'  // Correct Jira Xray URL for test case upload
+        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/1/import/test'  // Correct Jira Xray URL for test case upload
     }
 
     stages {
