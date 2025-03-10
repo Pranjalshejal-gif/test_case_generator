@@ -60,9 +60,12 @@ pipeline {
                         "issueUpdates": testCasesJson
                     ]
                     
-                    // Store the JSON payload in a variable
-                    env.JSON_PAYLOAD = JsonOutput.toJson(jsonPayload)
+                    // Store the JSON payload in an environment variable
+                    env.JSON_PAYLOAD = groovy.json.JsonOutput.toJson(jsonPayload)
                     echo "<strong>BULK TESTCASE:</strong>\n${env.JSON_PAYLOAD}"
+
+                    // Save the JSON payload to a file for debugging
+                    writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
                 }
             }
         }
