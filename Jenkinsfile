@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'
+        JIRA_PROJECT_KEY = 'IMP'
     }
 
     stages {
@@ -51,35 +52,62 @@ pipeline {
             }
         }
 
-        stage('Upload to Jira Xray') {
+         stages {
+        stage('Parse JSON and Upload to Jira') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
-                        def response = sh(
-                            script: """
-                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
-                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
-                            """,
-                            returnStdout: true
-                        ).trim()
-                        echo "Response from Jira: ${response}"
+                    // Get the current date and time in the format required for the filename
+                    def currentDateTime = new Date().format('yyyy-MM-dd_HH-mm-ss')
+                    def jsonFileName = "test_cases_${currentDateTime}.json"
 
-                        // Log the response but do not fail the pipeline
-                        if (response.contains("error")) {
-                            echo "Failed to upload to Jira, but proceeding: ${response}"
+                    // Construct the path to the file in the Jenkins workspace
+                    def filePath = "${env.WORKSPACE}/${jsonFileName}"
+                    
+                    // Check if the file exists
+                    if (fileExists(filePath)) {
+                        // Read the JSON file
+                        def testCases = readJSON file: filePath
+
+                        // Loop through each test case and create Jira issue
+                        testCases.each { testCase ->
+                            def testCaseNo = testCase.'Test Case No'
+                            def testStep = testCase.'Test Step'
+                            def testType = testCase.'Test Type'
+                            def testSummary = testCase.'Test Summary'
+                            def testData = testCase.'Test Data'
+                            def expectedResult = testCase.'Expected Result'
+
+                            // Generate the Jira issue using the provided data
+                            withCredentials([usernamePassword(credentialsId: 'testcase', usernameVariable: 'JIRA_USER', passwordVariable: 'JIRA_PASSWORD')]) {
+                                def jsonBody = """
+                                {
+                                    "fields": {
+                                        "project": {
+                                            "key": "$JIRA_PROJECT_KEY"
+                                        },
+                                        "summary": "$testSummary",
+                                        "description": "Test Case No: $testCaseNo\nTest Step: $testStep\nTest Type: $testType\nTest Data: $testData\nExpected Result: $expectedResult",
+                                        "issuetype": {
+                                            "name": "Task"
+                                        }
+                                    }
+                                }
+                                """
+
+                                // Call Jira REST API to create the issue
+                                sh """
+                                    curl -u $JIRA_USER:$JIRA_PASSWORD -X POST -H "Content-Type: application/json" \
+                                    -d '$jsonBody' \
+                                    $JIRA_URL/rest/api/2/issue/
+                                """
+                            }
                         }
+                    } else {
+                        error "The file $jsonFileName does not exist in the workspace."
                     }
                 }
             }
         }
     }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed! Please check the logs for more details.'
-        }
-    }
+}
 }
