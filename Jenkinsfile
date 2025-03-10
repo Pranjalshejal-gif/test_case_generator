@@ -35,10 +35,10 @@ pipeline {
                     echo "Flask API Response: ${response}"
 
                     try {
-                        // Clean up the response to remove the code block delimiters
+                        // Clean up the response to remove the markdown code block delimiters
                         def cleanedResponse = response.replaceAll(/```json\n|\n```/, '').trim()
                         
-                        // Check if the response is a valid JSON string
+                        // Check if the cleaned response is valid JSON
                         if (cleanedResponse) {
                             echo "Cleaned Response: ${cleanedResponse}"
                             
