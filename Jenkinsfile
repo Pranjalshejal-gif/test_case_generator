@@ -20,8 +20,10 @@ pipeline {
             }
         }
 
-       stage('Start Flask and Generate Test Cases') {
-    steps {
+       
+       
+    stage('Start Flask and Generate Test Cases') {
+      steps {
         script {
             // Start Flask in the background
             sh 'nohup python3 app.py > flask_output.log 2>&1 &'
@@ -35,30 +37,36 @@ pipeline {
             echo "Flask API Response: ${response}"
 
             try {
-                // Remove code block delimiters (```json\n and \n```), so we get valid JSON
+                // Clean up the response to remove the code block delimiters
                 def cleanedResponse = response.replaceAll(/```json\n|\n```/, '').trim()
-                echo "Cleaned Response: ${cleanedResponse}"
-
-                // Parse the cleaned response as JSON
-                def jsonResponse = readJSON text: cleanedResponse
                 
-                // Check if the response is an array and extract the test case information
-                if (jsonResponse instanceof List) {
-                    def testCaseDescriptions = jsonResponse.collect { testCase ->
-                        return """
-                        Test Case Name: ${testCase."Test Case Name"}
-                        Action: ${testCase.Action}
-                        Test Data: ${testCase."Test Data"}
-                        Expected Result: ${testCase."Expected Result"}
-                        """
-                    }.join("\n\n")
+                // Check if the response is a valid JSON string
+                if (cleanedResponse) {
+                    echo "Cleaned Response: ${cleanedResponse}"
+                    
+                    // Parse the cleaned response as JSON
+                    def jsonResponse = readJSON text: cleanedResponse
+                    
+                    // Check if the response is an array and extract the test case information
+                    if (jsonResponse instanceof List) {
+                        def testCaseDescriptions = jsonResponse.collect { testCase ->
+                            return """
+                            Test Case Name: ${testCase."Test Case Name"}
+                            Action: ${testCase.Action}
+                            Test Data: ${testCase."Test Data"}
+                            Expected Result: ${testCase."Expected Result"}
+                            """
+                        }.join("\n\n")
 
-                    // Save the test case descriptions for debugging
-                    env.JSON_PAYLOAD = testCaseDescriptions
-                    writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
-                    echo "JSON Payload successfully extracted."
+                        // Save the test case descriptions for debugging
+                        env.JSON_PAYLOAD = testCaseDescriptions
+                        writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
+                        echo "JSON Payload successfully extracted."
+                    } else {
+                        error "Error: Expected an array in the response but got ${jsonResponse.getClass().getName()}"
+                    }
                 } else {
-                    error "Error: Expected an array in the response but got ${jsonResponse.getClass().getName()}"
+                    error "Error: The cleaned response is empty or invalid."
                 }
             } catch (Exception e) {
                 error "Error parsing Flask API response: ${e.getMessage()}"
