@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'
-        JIRA_PROJECT_KEY = 'IMP'
     }
 
     stages {
@@ -28,7 +27,7 @@ pipeline {
                     
                     // Send request to Flask API to generate test cases
                     def response = sh(
-                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"UPI APP\", \"num_cases\": 5}'",
+                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"CBDC APP\", \"num_cases\": 5}'",
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
@@ -46,66 +45,41 @@ pipeline {
                         env.CSV_FILE = responseFile
                     }
 
-                    // Optionally stop Flask server (if needed)
+                    // Stop Flask server
                     // sh "pkill -f app.py"
                 }
             }
         }
 
-        stage('Parse JSON and Upload to Jira') {
+        stage('Upload to Jira Xray') {
             steps {
                 script {
-                    // Get the current date and time in the format required for the filename
-                    def currentDateTime = new Date().format('yyyy-MM-dd_HH-mm-ss')
-                    def jsonFileName = "test_cases_${currentDateTime}.json"
+                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
+                        def response = sh(
+                            script: """
+                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
+                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        echo "Response from Jira: ${response}"
 
-                    // Construct the path to the file in the Jenkins workspace
-                    def filePath = "${env.WORKSPACE}/${jsonFileName}"
-                    
-                    // Check if the file exists
-                    if (fileExists(filePath)) {
-                        // Read the JSON file
-                        def testCases = readJSON file: filePath
-
-                        // Loop through each test case and create Jira issue
-                        testCases.each { testCase ->
-                            def testCaseNo = testCase.'Test Case No'
-                            def testStep = testCase.'Test Step'
-                            def testType = testCase.'Test Type'
-                            def testSummary = testCase.'Test Summary'
-                            def testData = testCase.'Test Data'
-                            def expectedResult = testCase.'Expected Result'
-
-                            // Generate the Jira issue using the provided data
-                            withCredentials([usernamePassword(credentialsId: 'testcase', usernameVariable: 'JIRA_USER', passwordVariable: 'JIRA_PASSWORD')]) {
-                                def jsonBody = """
-                                {
-                                    "fields": {
-                                        "project": {
-                                            "key": "$JIRA_PROJECT_KEY"
-                                        },
-                                        "summary": "$testSummary",
-                                        "description": "Test Case No: $testCaseNo\nTest Step: $testStep\nTest Type: $testType\nTest Data: $testData\nExpected Result: $expectedResult",
-                                        "issuetype": {
-                                            "name": "Task"
-                                        }
-                                    }
-                                }
-                                """
-
-                                // Call Jira REST API to create the issue
-                                sh """
-                                    curl -u $JIRA_USER:$JIRA_PASSWORD -X POST -H "Content-Type: application/json" \
-                                    -d '$jsonBody' \
-                                    $JIRA_URL/rest/api/2/issue/
-                                """
-                            }
+                        // Log the response but do not fail the pipeline
+                        if (response.contains("error")) {
+                            echo "Failed to upload to Jira, but proceeding: ${response}"
                         }
-                    } else {
-                        error "The file $jsonFileName does not exist in the workspace."
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed! Please check the logs for more details.'
         }
     }
 }
