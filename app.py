@@ -6,7 +6,7 @@ import re
 app = Flask(__name__)
 
 # Set up the Gemini API Key
-genai.configure(api_key="AIzaSyAG-EcIMhPiHxiY7JJ9_Hc3ILWRJr0rOSA")  # Replace with your actual API key
+genai.configure(api_key="AIzaSyAU8yxgRk9k2_b7W6tlOotvgyVnNs4_31E")  # Replace with actual API key
 
 def generate_test_cases(prompt, num_cases=5):
     """
@@ -26,10 +26,7 @@ def generate_test_cases(prompt, num_cases=5):
         "Test Case Name", "Test Data", "Expected Result", "Test Case ID", "Action".
         """
         response = model.generate_content(detailed_prompt)
-        if response and response.text:
-            return response.text
-        else:
-            return "No response received."
+        return response.text if response and response.text else "No response received."
     except Exception as e:
         return f"Error generating test cases: {str(e)}"
 
@@ -80,12 +77,10 @@ def generate():
     if not topic:
         return jsonify({"error": "No topic provided. Please provide a topic."}), 400
 
-    # Generate test cases using Gemini API
     ai_output = generate_test_cases(topic, num_cases)
     if "Error" in ai_output or "No response" in ai_output:
         return jsonify({"error": ai_output}), 500
 
-    # Parse and clean the generated test cases
     parsed_test_cases = parse_test_cases(ai_output)
     if "error" in parsed_test_cases:
         return jsonify({"error": parsed_test_cases["error"]}), 500
