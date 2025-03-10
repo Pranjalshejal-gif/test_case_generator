@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     environment {
-        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/2/issue/bulk'  // Jira Xray URL for bulk test case upload
+        JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3 4/apache-jmeter-5.6.3/bin'  
+        JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents.jmx'  // Path to the original JMX file (you provide)
+        MODIFIED_JMX_FILE = 'modified_test_case_plan.jmx'  // Path to store modified JMX file
     }
 
     stages {
@@ -21,86 +23,68 @@ pipeline {
         stage('Start Flask and Generate Test Cases') {
             steps {
                 script {
-                    // Start Flask in the background and redirect output to a log file
+                    // Start Flask in the background
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5 // Wait for Flask to start
+                    sleep 5  // Allow Flask time to start
                     
-                    // Send request to Flask API to generate test cases
+                    // Request test cases from Flask API
                     def response = sh(
                         script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"CBDC APP\", \"num_cases\": 5}'",
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
                     
-                    // Assuming the response contains test case summaries and descriptions
-                    def testCasesJson = []
-                    def testCaseData = response.split("\n")  // Split response into lines
-                    
-                    // Create JSON payload based on test case data
-                    testCaseData.eachWithIndex { line, index ->
-                        if (index > 0 && line.trim()) {  // Skip header and empty lines
-                            def columns = line.split(",")
-                            def summary = columns[0].trim()
-                            def description = columns[1].trim()
-                            
-                            def testCase = [
-                                "fields": [
-                                    "project": [ "key": "IMP" ],  // Adjust project key if needed
-                                    "summary": summary,
-                                    "description": description,
-                                    "issuetype": [ "name": "Test" ]
-                                ]
-                            ]
-                            testCasesJson.add(testCase)
-                        }
-                    }
+                    // Store the JSON payload
+                    env.JSON_PAYLOAD = response
 
-                    // Create the final JSON structure
-                    def jsonPayload = [
-                        "issueUpdates": testCasesJson
-                    ]
-                    
-                    // Store the JSON payload in an environment variable
-                    env.JSON_PAYLOAD = groovy.json.JsonOutput.toJson(jsonPayload)
-                    echo "<strong>BULK TESTCASE:</strong>\n${env.JSON_PAYLOAD}"
-
-                    // Save the JSON payload to a file for debugging
+                    // Save the JSON payload for debugging
                     writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
                 }
             }
         }
 
-        // stage('Upload to Jira Xray') {
-        //     steps {
-        //         script {
-        //             withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
-        //                 def response = sh(
-        //                     script: """
-        //                     curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: application/json" \
-        //                     -d '${env.JSON_PAYLOAD}' "${JIRA_URL}"
-        //                     """,
-        //                     returnStdout: true
-        //                 ).trim()
-        //                 echo "Response from Jira: ${response}"
+        stage('Modify JMX File with JSON Payload') {
+            steps {
+                script {
+                    // Read the existing JMX file
+                    def jmxContent = readFile(env.JMX_FILE_PATH)
+                    
+                    // Replace request body with generated JSON payload
+                    def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
+                        '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
+                    
+                    // Write the modified JMX file
+                    writeFile file: env.MODIFIED_JMX_FILE, text: modifiedJmxContent
+                    
+                    echo "JMX file updated with JSON payload."
+                }
+            }
+        }
 
-        //                 // Check if the response indicates success or failure
-        //                 if (response.contains("error")) {
-        //                     echo "Failed to upload to Jira Xray: ${response}"
-        //                 } else {
-        //                     echo "Test cases successfully uploaded to Jira Xray."
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Run JMeter Test') {
+            steps {
+                script {
+                    // Verify the modified JMX file exists
+                    if (fileExists(env.MODIFIED_JMX_FILE)) {
+                        // Execute JMeter with the modified test plan
+                        def jmeterCommand = "${env.JMETER_PATH}/bin/jmeter -n -t ${env.MODIFIED_JMX_FILE} -l results.jtl"
+                        echo "Executing JMeter test..."
+                        sh jmeterCommand
+                        echo "JMeter test completed. Check results.jtl for details."
+                    } else {
+                        error "Modified JMX file not found!"
+                    }
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline executed successfully!'
         }
         failure {
-            echo 'Pipeline failed! Please check the logs for more details.'
+            echo 'Pipeline failed! Check logs for issues.'
         }
     }
 }
