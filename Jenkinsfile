@@ -73,9 +73,9 @@ pipeline {
             }
         }
 
-       stage('Modify JMX File with JSON Payload') {
-    steps {
-        script {
+    stage('Modify JMX File with JSON Payload') {
+         steps {
+             script {
             // Ensure the JSON payload is not empty
             if (env.JSON_PAYLOAD?.trim()) {
                 // Get the current date and time for the filename
