@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/1/import/test'  // Correct Jira Xray URL for test case upload
+        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/2/issue/bulk'  // Jira Xray URL for bulk test case upload
     }
 
     stages {
@@ -32,35 +32,12 @@ pipeline {
                     ).trim()
                     echo "Flask API Response: ${response}"
                     
-                    // Check if the response contains a CSV filename
-                    def match = (response =~ /"csv_filename": "(.*?)"/)
-                    if (match) {
-                        env.CSV_FILE = match[0][1]
-                        echo "CSV file generated: ${env.CSV_FILE}"
-                    } else {
-                        // If no CSV file is found, save response to a text file
-                        echo "No CSV file found. Saving response as a text file..."
-                        def responseFile = "${env.WORKSPACE}/flask_response.txt"
-                        writeFile file: responseFile, text: response
-                        env.CSV_FILE = responseFile
-                    }
-
-                    // Stop Flask server
-                    // sh "pkill -f app.py"
-                }
-            }
-        }
-
-        stage('Generate JSON Payload') {
-            steps {
-                script {
+                    // Assuming the response contains test case summaries and descriptions
                     def testCasesJson = []
-                    def csvFile = readFile("${env.CSV_FILE}")
-                    def lines = csvFile.split("\n")
+                    def testCaseData = response.split("\n")  // Split response into lines
                     
-                    // Loop through CSV lines and create JSON objects
-                    lines.eachWithIndex { line, index ->
-                        // Assuming CSV format: summary, description
+                    // Create JSON payload based on test case data
+                    testCaseData.eachWithIndex { line, index ->
                         if (index > 0 && line.trim()) {  // Skip header and empty lines
                             def columns = line.split(",")
                             def summary = columns[0].trim()
