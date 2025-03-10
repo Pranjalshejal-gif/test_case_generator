@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         JMETER_PATH = '/home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3 4/apache-jmeter-5.6.3/bin'  
-        JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents.jmx'  // Path to the original JMX file (you provide)
+        JMX_FILE_PATH = '/home/sarvatra.in/pranjal.shejal/Documents/AI.jmx'  // Path to the original JMX file (you provide)
         MODIFIED_JMX_FILE = 'modified_test_case_plan.jmx'  // Path to store modified JMX file
     }
 
