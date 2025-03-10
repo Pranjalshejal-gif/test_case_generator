@@ -20,48 +20,53 @@ pipeline {
             }
         }
 
-        stage('Start Flask and Generate Test Cases') {
-            steps {
-                script {
-                    // Start Flask in the background
-                    sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5  // Allow Flask time to start
-                    
-                    // Request test cases from Flask API
-                    def response = sh(
-                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"CBDC APP\", \"num_cases\": 5}'",
-                        returnStdout: true
-                    ).trim()
-                    echo "Flask API Response: ${response}"
+       stage('Start Flask and Generate Test Cases') {
+    steps {
+        script {
+            // Start Flask in the background
+            sh 'nohup python3 app.py > flask_output.log 2>&1 &'
+            sleep 5  // Allow Flask time to start
+            
+            // Request test cases from Flask API
+            def response = sh(
+                script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"CBDC APP\", \"num_cases\": 5}'",
+                returnStdout: true
+            ).trim()
+            echo "Flask API Response: ${response}"
 
-                    try {
-                        // Parse the response JSON
-                        def jsonResponse = readJSON text: response
-                        
-                        // Check if the response is an array and extract the test case information
-                        if (jsonResponse instanceof List) {
-                            def testCaseDescriptions = jsonResponse.collect { testCase ->
-                                return """
-                                Test Case Name: ${testCase."Test Case Name"}
-                                Action: ${testCase.Action}
-                                Test Data: ${testCase."Test Data"}
-                                Expected Result: ${testCase."Expected Result"}
-                                """
-                            }.join("\n\n")
+            try {
+                // Remove code block delimiters (```json\n and \n```), so we get valid JSON
+                def cleanedResponse = response.replaceAll(/```json\n|\n```/, '').trim()
+                echo "Cleaned Response: ${cleanedResponse}"
 
-                            // Save the test case descriptions for debugging
-                            env.JSON_PAYLOAD = testCaseDescriptions
-                            writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
-                            echo "JSON Payload successfully extracted."
-                        } else {
-                            error "Error: Expected an array in the response but got ${jsonResponse.getClass().getName()}"
-                        }
-                    } catch (Exception e) {
-                        error "Error parsing Flask API response: ${e.getMessage()}"
-                    }
+                // Parse the cleaned response as JSON
+                def jsonResponse = readJSON text: cleanedResponse
+                
+                // Check if the response is an array and extract the test case information
+                if (jsonResponse instanceof List) {
+                    def testCaseDescriptions = jsonResponse.collect { testCase ->
+                        return """
+                        Test Case Name: ${testCase."Test Case Name"}
+                        Action: ${testCase.Action}
+                        Test Data: ${testCase."Test Data"}
+                        Expected Result: ${testCase."Expected Result"}
+                        """
+                    }.join("\n\n")
+
+                    // Save the test case descriptions for debugging
+                    env.JSON_PAYLOAD = testCaseDescriptions
+                    writeFile file: 'test_case_payload.json', text: env.JSON_PAYLOAD
+                    echo "JSON Payload successfully extracted."
+                } else {
+                    error "Error: Expected an array in the response but got ${jsonResponse.getClass().getName()}"
                 }
+            } catch (Exception e) {
+                error "Error parsing Flask API response: ${e.getMessage()}"
             }
         }
+    }
+}
+
 
         stage('Modify JMX File with JSON Payload') {
             steps {
