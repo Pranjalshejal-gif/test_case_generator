@@ -6,7 +6,7 @@ import re
 app = Flask(__name__)
 
 # Hardcoded Gemini API Key (Replace with your actual key)
-GEMINI_API_KEY = "AIzaSyAG-EcIMhPiHxiY7JJ9_Hc3ILWRJr0rOSA"
+GEMINI_API_KEY = "AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04"
 
 genai.configure(api_key=GEMINI_API_KEY)
 
