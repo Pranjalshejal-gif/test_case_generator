@@ -28,7 +28,7 @@ pipeline {
                     
                     // Request test cases from Flask API
                     def response = sh(
-                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"UPI APP\", \"num_cases\": 5}'",
+                        script: "curl -X POST http://127.0.0.1:5000/generate -H 'Content-Type: application/json' -d '{\"topic\": \"CBDC APP\", \"num_cases\": 5}'",
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
