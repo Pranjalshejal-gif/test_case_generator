@@ -55,9 +55,14 @@ pipeline {
                         }
                     }
 
-                    // Store the generated JSON in a variable
-                    env.JSON_PAYLOAD = JsonOutput.toJson([ "issueUpdates": testCasesJson ])
-                    echo "Generated JSON Payload: ${env.JSON_PAYLOAD}"
+                    // Create the final JSON structure
+                    def jsonPayload = [
+                        "issueUpdates": testCasesJson
+                    ]
+                    
+                    // Store the JSON payload in a variable
+                    env.JSON_PAYLOAD = JsonOutput.toJson(jsonPayload)
+                    echo "<strong>BULK TESTCASE:</strong>\n${env.JSON_PAYLOAD}"
                 }
             }
         }
