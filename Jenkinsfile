@@ -73,38 +73,27 @@ pipeline {
             }
         }
 
-    stage('Modify JMX File with JSON Payload') {
-         steps {
-             script {
-            // Ensure the JSON payload is not empty
-            if (env.JSON_PAYLOAD?.trim()) {
-                // Get the current date and time for the filename
-                def currentDateTime = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date())
-                def modifiedJmxFileWithTimestamp = "modified_test_case_plan_${currentDateTime}.jmx"
+        stage('Modify JMX File with JSON Payload') {
+            steps {
+                script {
+                    // Ensure the JSON payload is not empty
+                    if (env.JSON_PAYLOAD?.trim()) {
+                        // Read the existing JMX file
+                        def jmxContent = readFile(env.JMX_FILE_PATH)
 
-                // Get the workspace directory
-                def workspaceDir = pwd()
-
-                // Define the full path for the modified JMX file in the workspace
-                def modifiedJmxFilePath = "${workspaceDir}/${modifiedJmxFileWithTimestamp}"
-
-                // Read the existing JMX file
-                def jmxContent = readFile(env.JMX_FILE_PATH)
-
-                // Replace request body with the extracted JSON payload
-                def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
-                    '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
-                
-                // Write the modified JMX file with timestamp in the workspace
-                writeFile file: modifiedJmxFilePath, text: modifiedJmxContent
-                echo "JMX file updated with JSON payload. Saved as ${modifiedJmxFileWithTimestamp} in workspace."
-            } else {
-                error "Error: JSON payload is empty. Cannot modify JMX file."
+                        // Replace request body with the extracted JSON payload
+                        def modifiedJmxContent = jmxContent.replaceAll('(?s)<stringProp name="HTTPSampler.postBodyRaw">.*?</stringProp>', 
+                            '<stringProp name="HTTPSampler.postBodyRaw">' + env.JSON_PAYLOAD.replaceAll('"', '&quot;') + '</stringProp>')
+                        
+                        // Write the modified JMX file
+                        writeFile file: env.MODIFIED_JMX_FILE, text: modifiedJmxContent
+                        echo "JMX file updated with JSON payload."
+                    } else {
+                        error "Error: JSON payload is empty. Cannot modify JMX file."
+                    }
+                }
             }
         }
-    }
-}
-
 
         stage('Run JMeter Test') {
             steps {
