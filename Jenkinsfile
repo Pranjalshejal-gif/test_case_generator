@@ -54,7 +54,7 @@ pipeline {
         stage('Upload to Jira Xray') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'Shaikh@2609', usernameVariable: 'teheseen.shaikh@sarvatra.in')]) {
+                    withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
                         def response = sh(
                             script: """
                             curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
