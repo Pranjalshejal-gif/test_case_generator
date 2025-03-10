@@ -89,7 +89,7 @@ pipeline {
                         def timestampedJmxFile = "modified_test_case_plan_${timestamp}.jmx"
 
                         // Write the modified JMX file with the current timestamp in its name
-                        writeFile file: timestampedJmxFile, text: modifiedJmxContent
+                        writeFile file: "${workspace}/modified_test_case_plan_${timestamp}.jmx", text: modifiedJmxContent
                         echo "JMX file updated with JSON payload and saved as ${timestampedJmxFile}."
                     } else {
                         error "Error: JSON payload is empty. Cannot modify JMX file."
@@ -106,10 +106,10 @@ pipeline {
                     def timestampedJmxFile = "modified_test_case_plan_${timestamp}.jmx"
 
                     // Verify the modified JMX file exists
-                    if (fileExists(timestampedJmxFile)) {
+                    if (fileExists("${workspace}/${timestampedJmxFile}")) {
                         // Execute JMeter with the modified test plan using 'java -jar' command
                         echo "Executing JMeter test..."
-                        sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${timestampedJmxFile}\" -l results.jtl"
+                        sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${workspace}/${timestampedJmxFile}\" -l results.jtl"
                         echo "JMeter test completed. Check results.jtl for details."
                         echo "Displaying JMeter logs..."
                         sh "tail -n 20 jmeter.log"
@@ -128,7 +128,7 @@ pipeline {
                     def timestampedJmxFile = "modified_test_case_plan_${timestamp}.jmx"
                     
                     // Save the modified JMX file as an artifact to the Jenkins workspace
-                    archiveArtifacts artifacts: timestampedJmxFile, allowEmptyArchive: true
+                    archiveArtifacts artifacts: "${workspace}/${timestampedJmxFile}", allowEmptyArchive: true
                     echo "Modified JMX file saved in workspace."
                 }
             }
