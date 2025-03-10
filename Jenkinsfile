@@ -71,6 +71,8 @@ pipeline {
                 sh "java -jar /home/sarvatra.in/pranjal.shejal/apache-jmeter-5.6.3/bin/ApacheJMeter.jar -n -t \"${env.MODIFIED_JMX_FILE}\" -l results.jtl"
 
                 echo "JMeter test completed. Check results.jtl for details."
+                 echo "Displaying JMeter logs..."
+                        sh "tail -n 20 jmeter.log"
             } else {
                 error "Modified JMX file not found!"
             }
