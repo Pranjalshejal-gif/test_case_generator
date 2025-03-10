@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/raven/1.0/import/test'
+        JIRA_URL = 'https://sarvatrajira.atlassian.net/rest/api/2/issue/bulk'  // Bulk issue creation URL
     }
 
     stages {
@@ -51,14 +51,29 @@ pipeline {
             }
         }
 
-        stage('Upload to Jira Xray') {
+        stage('Upload to Jira (Bulk Issue Creation)') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'testcase', passwordVariable: 'JIRA_PASSWORD', usernameVariable: 'JIRA_USER')]) {
+                        // Prepare the bulk create issues JSON payload
+                        def jsonPayload = """
+                        {
+                          "issueUpdates": [
+                            {
+                              "fields": {
+                                "project": { "key": "YOUR_PROJECT_KEY" },
+                                "summary": "Test case summary from CSV",
+                                "description": "Test case description from CSV",
+                                "issuetype": { "name": "Task" }
+                              }
+                            }
+                          ]
+                        }
+                        """
                         def response = sh(
                             script: """
-                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: multipart/form-data" \
-                            -F "file=@${env.CSV_FILE}" "${JIRA_URL}"
+                            curl -u ${JIRA_USER}:${JIRA_PASSWORD} -X POST -H "Content-Type: application/json" \
+                            -d '${jsonPayload}' "${JIRA_URL}"
                             """,
                             returnStdout: true
                         ).trim()
@@ -66,13 +81,14 @@ pipeline {
 
                         // Log the response but do not fail the pipeline
                         if (response.contains("error")) {
-                            echo "Failed to upload to Jira, but proceeding: ${response}"
+                            echo "Failed to create issues in Jira: ${response}"
+                        } else {
+                            echo "Issues successfully created in Jira."
                         }
                     }
                 }
             }
         }
-        
     }
 
     post {
