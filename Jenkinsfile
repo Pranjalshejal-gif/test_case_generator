@@ -1,5 +1,6 @@
 pipeline {
-    agent {label 'Teheseen'}
+    // agent {label 'Teheseen'}
+    agent any
 
     environment {
         GIT_REPO = 'https://github.com/Pranjalshejal-gif/test_case_generator.git'
