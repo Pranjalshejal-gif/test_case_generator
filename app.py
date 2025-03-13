@@ -8,12 +8,12 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Set up the Gemini API Key (Replace with your actual API key)
-genai.configure(api_key="AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04")
+# Configure the Gemini API Key
+GEMINI_API_KEY = "AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04"  # Replace with your actual API key
+genai.configure(api_key=GEMINI_API_KEY)
 
-# Ensure CSV files are saved inside Jenkins workspace
-# WORKSPACE = os.getenv("WORKSPACE", os.getcwd())
-WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")  # Default Jenkins workspace path
+# Define Jenkins workspace path
+WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 
 def generate_test_cases(prompt, num_cases=5):
     """
@@ -28,7 +28,7 @@ def generate_test_cases(prompt, num_cases=5):
         - "Test Case Name": A descriptive name.
         - "Test Data": The input data.
         - "Expected Result": The expected outcome.
-
+        
         Return ONLY the JSON array, without any code block formatting or additional text.
         """
         response = model.generate_content(detailed_prompt)
@@ -47,66 +47,19 @@ def parse_test_cases(ai_output):
     """
     try:
         cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
-
         if cleaned_output.startswith("[") and cleaned_output.endswith("]"):
             return json.loads(cleaned_output)
         else:
             return {"error": "AI response is not a valid JSON array."}
-    
     except (json.JSONDecodeError, ValueError) as e:
         return {"error": f"Error parsing AI output: {str(e)}"}
-
-
-# def save_as_csv(test_cases):
-#     """
-#     Saves parsed test cases to a CSV file inside the Jenkins workspace.
-#     """
-
-    
-
-#     WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
-#     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-#     filename = f"test_cases_{timestamp}.csv"
-    
-#     # Save directly inside Jenkins workspace
-#     filepath = os.path.join(WORKSPACE, filename)
-
-#     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
-
-#     try:
-#         with open(filepath, mode="w", newline="", encoding="utf-8") as file:
-#             writer = csv.DictWriter(file, fieldnames=csv_headers)
-#             writer.writeheader()
-
-#             for index, case in enumerate(test_cases, start=1):
-#                 writer.writerow({
-#                     "Test Case No": index,
-#                     "Test Step": case.get("Test Case ID", ""),
-#                     "Test Type": "Manual",
-#                     "Test Summary": case.get("Test Case Name", ""),
-#                     "Test Data": json.dumps(case.get("Test Data", {})),
-#                     "Expected Result": json.dumps(case.get("Expected Result", {}))
-#                 })
-
-#         return filepath  # Return full path directly inside Jenkins workspace
-    
-#     except Exception as e:
-#         return {"error": f"Error saving CSV: {str(e)}"}
-    
 
 def save_as_csv(test_cases, user_filename):
     """
     Saves parsed test cases to a CSV file inside the Jenkins workspace.
-    
-    :param test_cases: List of test cases to be saved
-    :param user_filename: The base filename provided by the user (without extension)
-    :return: Full file path or error message
     """
-    
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"  # Append timestamp to user-provided filename
-    
-    WORKSPACE = "/var/lib/jenkins/workspace/Test_Suit/"  # Define your Jenkins workspace path
     filepath = os.path.join(WORKSPACE, filename)
 
     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
@@ -115,7 +68,6 @@ def save_as_csv(test_cases, user_filename):
         with open(filepath, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=csv_headers)
             writer.writeheader()
-
             for index, case in enumerate(test_cases, start=1):
                 writer.writerow({
                     "Test Case No": index,
@@ -125,9 +77,7 @@ def save_as_csv(test_cases, user_filename):
                     "Test Data": json.dumps(case.get("Test Data", {})),
                     "Expected Result": json.dumps(case.get("Expected Result", {}))
                 })
-
         return filepath  # Return the full file path
-    
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
 
@@ -140,22 +90,20 @@ def generate():
     data = request.json
     topic = data.get("topic")
     num_cases = int(data.get("num_cases", 5))
+    user_filename = data.get("filename", "test_cases")  # Get filename from user input
 
     if not topic:
         return jsonify({"error": "No topic provided. Please provide a topic."}), 400
 
     ai_output = generate_test_cases(topic, num_cases)
-
     if isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify(ai_output), 500
 
     parsed_test_cases = parse_test_cases(ai_output)
-    
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
 
-    csv_filepath = save_as_csv(parsed_test_cases)
-    
+    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
     if isinstance(csv_filepath, dict) and "error" in csv_filepath:
         return jsonify(csv_filepath), 500
 
@@ -171,7 +119,6 @@ def download_file(filename):
     Endpoint to download the generated CSV file.
     """
     file_path = os.path.join(WORKSPACE, filename)
-
     try:
         return send_file(file_path, as_attachment=True)
     except FileNotFoundError:

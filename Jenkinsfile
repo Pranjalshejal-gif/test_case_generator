@@ -1,5 +1,4 @@
 pipeline {
-    // agent {label 'Teheseen'}
     agent any
 
     environment {
@@ -9,6 +8,7 @@ pipeline {
     parameters {
         string(name: 'TEST_TOPIC', defaultValue: 'CBDC APP', description: 'Enter the test topic')
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
+        string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
     }
 
     stages {
@@ -38,40 +38,34 @@ pipeline {
         stage('Generate Test Cases') {
             steps {
                 script {
-                   echo "Calling Flask API to generate test cases..."
-            
-            // Make API request and get JSON response as a string
+                    echo "Calling Flask API to generate test cases..."
+                    
                     def jsonResponse = sh(script: """
-                curl -s -X POST http://127.0.0.1:5000/generate \
-                -H "Content-Type: application/json" \
-                -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'
-            """, returnStdout: true).trim()
+                        curl -s -X POST http://127.0.0.1:5000/generate \
+                        -H "Content-Type: application/json" \
+                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}, "filename": "${params.CSV_FILENAME}"}'
+                    """, returnStdout: true).trim()
+                    
+                    echo "Flask API Response: ${jsonResponse}"
+                    
+                    def parsedResponse = readJSON text: jsonResponse
+                    def csvFilepath = parsedResponse.csv_filepath ?: ''
 
-                   echo "Flask API Response: ${jsonResponse}"
+                    if (!csvFilepath || csvFilepath == "null") {
+                        error "Failed to extract CSV filepath from API response."
+                    }
 
-            // Parse API response
-            def parsedResponse = readJSON text: jsonResponse
+                    echo "CSV file generated: ${csvFilepath}"
 
-            // Extract CSV file path
-            def csvFilepath = parsedResponse.csv_filepath ?: ''
+                    def fileExists = sh(script: "test -f ${csvFilepath} && echo 'exists'", returnStdout: true).trim()
+                    if (fileExists != "exists") {
+                        error "CSV file '${csvFilepath}' not found!"
+                    }
 
-            if (!csvFilepath || csvFilepath == "null") {
-                error "Failed to extract CSV filepath from API response."
+                    echo "CSV file is successfully stored in Jenkins workspace!"
+                }
             }
-
-            echo "CSV file generated: ${csvFilepath}"
-
-            // Check if the file exists
-            def fileExists = sh(script: "test -f ${csvFilepath} && echo 'exists'", returnStdout: true).trim()
-            if (fileExists != "exists") {
-                error "CSV file '${csvFilepath}' not found!"
-            }
-
-            echo "CSV file is successfully stored in Jenkins workspace!"
         }
-    }
-}
-
     }
 
     post {
