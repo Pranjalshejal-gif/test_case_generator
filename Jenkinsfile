@@ -28,7 +28,7 @@ pipeline {
                 script {
                     echo "Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5  // Ensure Flask has time to start
+                    sleep 10  // Ensure Flask has time to fully start
                     echo "Flask application started!"
                 }
             }
@@ -51,23 +51,24 @@ pipeline {
                     // Use readJSON to parse response safely
                     def parsedResponse = readJSON text: jsonResponse
 
-                    // Extract CSV filename
+                    // Extract CSV filename and path
                     def csvFilename = parsedResponse.csv_filename ?: 'default.csv'
+                    def csvFilepath = parsedResponse.csv_filepath ?: ''
 
-                    if (!csvFilename || csvFilename == "null") {
-                        error "Failed to extract CSV filename from API response."
+                    if (!csvFilepath || csvFilepath == "null") {
+                        error "Failed to extract CSV filepath from API response."
                     }
 
-                    echo "Extracted CSV Filename: ${csvFilename}"
+                    echo "Extracted CSV Filepath: ${csvFilepath}"
 
                     // Check if file exists
-                    def fileExists = sh(script: "test -f ${csvFilename} && echo 'exists'", returnStdout: true).trim()
+                    def fileExists = sh(script: "test -f ${csvFilepath} && echo 'exists'", returnStdout: true).trim()
                     if (fileExists != "exists") {
-                        error "CSV file '${csvFilename}' not found!"
+                        error "CSV file '${csvFilepath}' not found!"
                     }
 
                     // Move CSV file to Jenkins workspace
-                    sh "mv ${csvFilename} ${WORKSPACE}/"
+                    sh "mv ${csvFilepath} ${WORKSPACE}/"
                     echo "CSV file saved in Jenkins workspace: ${WORKSPACE}/${csvFilename}"
 
                     // Set environment variable for later stages
