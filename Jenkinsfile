@@ -30,22 +30,18 @@ pipeline {
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
                     sleep 5 // Give Flask time to start
 
-                    // Call API
+                    // Call API and capture JSON response
                     def response = sh(
-                        script: """
-                        curl -X POST http://127.0.0.1:5000/generate \
+                        script: """curl -X POST http://127.0.0.1:5000/generate \
                         -H 'Content-Type: application/json' \
-                        -d '{\"topic\": \"${params.TEST_TOPIC}\", \"num_cases\": ${params.NUM_CASES}}'
-                        """,
+                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'""",
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
 
-                    // Extract CSV filename using awk (instead of jq)
+                    // Extract CSV filename using awk (avoiding Groovy escaping issues)
                     def csvFilename = sh(
-                        script: """
-                        echo '${response}' | awk -F'"csv_filename":' '{print $2}' | awk -F'"' '{print $2}'
-                        """,
+                        script: "echo \"${response}\" | awk -F'\"csv_filename\":' '{print \$2}' | awk -F'\"' '{print \$2}'",
                         returnStdout: true
                     ).trim()
 
