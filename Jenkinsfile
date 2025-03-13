@@ -8,8 +8,9 @@ pipeline {
     parameters {
         string(name: 'TEST_TOPIC', defaultValue: 'CBDC APP', description: 'Enter the test topic')
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
-        string(name: 'FILE_NAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
+        string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
     }
+FILE_NAME
     stages {
         stage('Clone Repository') {
             steps {
@@ -42,7 +43,7 @@ pipeline {
                     def jsonResponse = sh(script: """
                         curl -s -X POST http://127.0.0.1:5000/generate \
                         -H "Content-Type: application/json" \
-                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}, "filename": "${params.FILE_NAME}"}'
+                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}, "filename": "${params.CSV_FILENAME}"}'
                     """, returnStdout: true).trim()
                     
                     echo "Flask API Response: ${jsonResponse}"
