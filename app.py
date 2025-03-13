@@ -94,7 +94,7 @@ def parse_test_cases(ai_output):
 #         return {"error": f"Error saving CSV: {str(e)}"}
     
 
-def save_as_csv(test_cases, FILE_NAME):
+def save_as_csv(test_cases, user_filename):
     """
     Saves parsed test cases to a CSV file inside the Jenkins workspace.
     
@@ -104,7 +104,7 @@ def save_as_csv(test_cases, FILE_NAME):
     """
     
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"{FILE_NAME}_{timestamp}.csv"  # Append timestamp to user-provided filename
+    filename = f"{user_filename}_{timestamp}.csv"  # Append timestamp to user-provided filename
     
     WORKSPACE = "/var/lib/jenkins/workspace/Test_Suit/"  # Define your Jenkins workspace path
     filepath = os.path.join(WORKSPACE, filename)
