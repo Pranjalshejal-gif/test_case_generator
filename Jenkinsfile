@@ -23,53 +23,58 @@ pipeline {
             }
         }
 
-        stage('Start Flask and Generate Test Cases') {
+        stage('Start Flask Server') {
             steps {
                 script {
-                    // Start Flask in the background
+                    echo "Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5 // Give Flask some time to start
+                    sleep 5  // Ensure Flask has time to start
+                    echo "Flask application started!"
+                }
+            }
+        }
 
-                    // Call API and capture JSON response
-                    def response = sh(
-                        script: """curl -s -X POST http://127.0.0.1:5000/generate \
+        stage('Generate Test Cases') {
+            steps {
+                script {
+                    echo "Calling Flask API to generate test cases..."
+                    
+                    // Make API request and get JSON response as a string
+                    def jsonResponse = sh(script: """
+                        curl -s -X POST http://127.0.0.1:5000/generate \
                         -H "Content-Type: application/json" \
-                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'""",
-                        returnStdout: true
-                    ).trim()
+                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'
+                    """, returnStdout: true).trim()
 
-                    echo "Flask API Response: ${response}"
+                    echo "Flask API Response: ${jsonResponse}"
 
-                    // Parse JSON response using Groovy (instead of jq)
-                    def jsonParser = new groovy.json.JsonSlurper()
-                    def parsedResponse = jsonParser.parseText(response)
+                    // Use readJSON to parse response safely
+                    def parsedResponse = readJSON text: jsonResponse
 
                     // Extract CSV filename
                     def csvFilename = parsedResponse.csv_filename ?: 'default.csv'
-
-                    echo "Extracted CSV Filename: ${csvFilename}"
 
                     if (!csvFilename || csvFilename == "null") {
                         error "Failed to extract CSV filename from API response."
                     }
 
-                    env.GENERATED_CSV = csvFilename
-                    echo "Generated CSV file: ${csvFilename}"
+                    echo "Extracted CSV Filename: ${csvFilename}"
 
-                    // Ensure file exists before proceeding
-                    def fileExistsCheck = sh(script: "test -f ${csvFilename} && echo 'exists'", returnStdout: true).trim()
-                    if (fileExistsCheck != "exists") {
+                    // Check if file exists
+                    def fileExists = sh(script: "test -f ${csvFilename} && echo 'exists'", returnStdout: true).trim()
+                    if (fileExists != "exists") {
                         error "CSV file '${csvFilename}' not found!"
                     }
 
                     // Move CSV file to Jenkins workspace
                     sh "mv ${csvFilename} ${WORKSPACE}/"
-
                     echo "CSV file saved in Jenkins workspace: ${WORKSPACE}/${csvFilename}"
+
+                    // Set environment variable for later stages
+                    env.GENERATED_CSV = "${WORKSPACE}/${csvFilename}"
                 }
             }
         }
-
     }
 
     post {

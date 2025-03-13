@@ -1,0 +1,11 @@
+Test Case No,Test Step,Test Type,Test Summary,Test Data,Expected Result
+1,IMP-TC-001,Manual,Empty String Input,"""""","""[]"""
+2,IMP-TC-002,Manual,Single Character Input,"""a""","""['a']"""
+3,IMP-TC-003,Manual,Simple String Input,"""abc""","""['a', 'b', 'c']"""
+4,IMP-TC-004,Manual,String with Spaces,"""a b c""","""['a', ' ', 'b', ' ', 'c']"""
+5,IMP-TC-005,Manual,String with Special Characters,"""!@#$%^""","""['!', '@', '#', '$', '%', '^']"""
+6,IMP-TC-006,Manual,String with Numbers,"""12345""","""['1', '2', '3', '4', '5']"""
+7,IMP-TC-007,Manual,Mixed String (Alphanumeric),"""a1b2c3""","""['a', '1', 'b', '2', 'c', '3']"""
+8,IMP-TC-008,Manual,Mixed String (Special Characters and Alphanumeric),"""a!1b@2c#3""","""['a', '!', '1', 'b', '@', '2', 'c', '#', '3']"""
+9,IMP-TC-009,Manual,Long String Input,"""This is a very long string for testing purposes.""","""['T', 'h', 'i', 's', ' ', 'i', 's', ' ', 'a', ' ', 'v', 'e', 'r', 'y', ' ', 'l', 'o', 'n', 'g', ' ', 's', 't', 'r', 'i', 'n', 'g', ' ', 'f', 'o', 'r', ' ', 't', 'e', 's', 't', 'i', 'n', 'g', ' ', 'p', 'u', 'r', 'p', 'o', 's', 'e', 's', '.']"""
+10,IMP-TC-010,Manual,Unicode String,"""\u4f60\u597d\u4e16\u754c""","""['\u4f60', '\u597d', '\u4e16', '\u754c']"""
