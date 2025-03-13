@@ -26,41 +26,35 @@ pipeline {
         stage('Start Flask and Generate Test Cases') {
             steps {
                 script {
-                    // Start Flask in the background and log output
-                    sh 'nohup python3 app.py > flask_output.log 2>&1 & tail -f flask_output.log &'
-                    sleep 5  // Allow Flask time to start
+                    // Start Flask in the background
+                    sh 'nohup python3 app.py > flask_output.log 2>&1 &'
+                    sleep 5 // Give Flask time to start
 
                     // Call API
                     def response = sh(
                         script: """
                         curl -X POST http://127.0.0.1:5000/generate \
                         -H 'Content-Type: application/json' \
-                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'
+                        -d '{\"topic\": \"${params.TEST_TOPIC}\", \"num_cases\": ${params.NUM_CASES}}'
                         """,
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
 
-                    // Extract CSV filename using shell command (grep & sed)
+                    // Extract CSV filename using awk (instead of jq)
                     def csvFilename = sh(
                         script: """
-                        echo '${response}' | grep -oP '"csv_filename":\s*"\K[^"]+'
+                        echo '${response}' | awk -F'"csv_filename":' '{print $2}' | awk -F'"' '{print $2}'
                         """,
                         returnStdout: true
                     ).trim()
 
-                    // Alternative: Extract CSV filename using Python
                     if (!csvFilename) {
-                        csvFilename = sh(
-                            script: """
-                            echo '${response}' | python3 -c 'import sys, json; print(json.load(sys.stdin)["csv_filename"])'
-                            """,
-                            returnStdout: true
-                        ).trim()
+                        error "Failed to extract CSV filename from API response."
                     }
 
                     env.GENERATED_CSV = csvFilename
-                    sleep 5 // Ensure Flask has completed writing the file
+                    sleep 5 // Ensure Flask has written the file
 
                     if (!fileExists(csvFilename)) {
                         error "CSV file not found: ${csvFilename}"
