@@ -26,11 +26,11 @@ pipeline {
         stage('Start Flask and Generate Test Cases') {
             steps {
                 script {
-                    // Start Flask in the background
-                    sh 'nohup python3 app.py > flask_output.log 2>&1 &'
+                    // Start Flask in the background and log output
+                    sh 'nohup python3 app.py > flask_output.log 2>&1 & tail -f flask_output.log &'
                     sleep 5  // Allow Flask time to start
 
-                    // Use input parameters for dynamic request
+                    // Call API
                     def response = sh(
                         script: """
                         curl -X POST http://127.0.0.1:5000/generate \
@@ -41,9 +41,17 @@ pipeline {
                     ).trim()
                     echo "Flask API Response: ${response}"
 
-                    // Extract CSV filename from response
-                    def csvFilename = response.replaceAll('.*"(test_cases_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.csv)".*', '$1')
+                    // Extract CSV filename from response using jq
+                    def csvFilename = sh(
+                        script: """
+                        echo '${response}' | jq -r '.file_name'
+                        """,
+                        returnStdout: true
+                    ).trim()
+
                     env.GENERATED_CSV = csvFilename
+
+                    sleep 5 // Ensure Flask has completed writing the file
 
                     if (!fileExists(csvFilename)) {
                         error "CSV file not found: ${csvFilename}"
@@ -56,7 +64,7 @@ pipeline {
         stage('Save Generated CSV File') {
             steps {
                 script {
-                    archiveArtifacts artifacts: "${env.GENERATED_CSV}", allowEmptyArchive: true
+                    archiveArtifacts artifacts: "${env.GENERATED_CSV}", allowEmptyArchive: false
                     echo "Saved CSV file in Jenkins workspace."
                 }
             }
