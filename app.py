@@ -1,12 +1,15 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 import google.generativeai as genai
 import json
 import re
+import csv
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Set up the Gemini API Key
-genai.configure(api_key="AIzaSyAU8yxgRk9k2_b7W6tlOotvgyVnNs4_31E")  # Replace with actual API key
+# Set up the Gemini API Key (Replace with your actual API key)
+genai.configure(api_key="AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04")
 
 def generate_test_cases(prompt, num_cases=5):
     """
@@ -16,53 +19,65 @@ def generate_test_cases(prompt, num_cases=5):
         model = genai.GenerativeModel("gemini-2.0-flash")
         detailed_prompt = f"""
         Generate {num_cases} detailed test cases for: {prompt}.
-        For each test case, provide:
-        - A concise Test Scenario.
-        - Specific Test Data to be used.
-        - The Expected Result of the test.
-        - The test case number.
+        Each test case should include:
+        - "Test Case ID": A unique identifier.
+        - "Test Case Name": A descriptive name.
+        - "Test Data": The input data.
+        - "Expected Result": The expected outcome.
 
-        Format the response as a JSON array of test cases, where each test case is a JSON object with keys:
-        "Test Case Name", "Test Data", "Expected Result", "Test Case ID", "Action".
+        Return the response strictly as a **JSON array**, without any code block formatting.
         """
         response = model.generate_content(detailed_prompt)
+
+        # Ensure response is valid
         return response.text if response and response.text else "No response received."
+    
     except Exception as e:
         return f"Error generating test cases: {str(e)}"
 
 def parse_test_cases(ai_output):
     """
-    Cleans AI output and parses it as JSON in the required format for Jira Xray.
+    Parses AI output into a structured JSON list.
     """
     try:
-        # Remove Markdown-style code blocks if present
+        # Remove unwanted code block markers (```json ... ```)
         cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
 
-        # Ensure it's valid JSON before parsing
+        # Validate if response is a proper JSON array
         if cleaned_output.startswith("[") and cleaned_output.endswith("]"):
-            json_data = json.loads(cleaned_output)
-            issue_updates = []
-
-            for case in json_data:
-                # Create test case fields according to the desired format
-                test_case = {
-                    "fields": {
-                        "project": { "key": "IMP" },
-                        "summary": f"Test Case: {case['Test Case Name']}",
-                        "description": f"Test Case ID: {case['Test Case ID']}\nTest Data: {json.dumps(case['Test Data'], indent=2)}\nAction: {case['Action']}\nExpected Result: {case['Expected Result']}",
-                        "issuetype": { "name": "Test" }
-                    }
-                }
-                issue_updates.append(test_case)
-
-            # Return the structured JSON response
-            return {"issueUpdates": issue_updates}
+            return json.loads(cleaned_output)
         else:
             raise ValueError("AI response is not a valid JSON array.")
-
-    except (json.JSONDecodeError, ValueError, KeyError) as e:
+    
+    except (json.JSONDecodeError, ValueError) as e:
         print(f"Error parsing AI output: {e}")
-        return {"error": str(e)}
+        return None
+
+def save_as_csv(test_cases):
+    """
+    Saves parsed test cases to a CSV file with a timestamped filename.
+    """
+    # Generate filename with current date and time
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"test_cases_{timestamp}.csv"
+
+    csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
+
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=csv_headers)
+        writer.writeheader()
+
+        for index, case in enumerate(test_cases, start=1):
+            writer.writerow({
+                "Test Case No": index,
+                "Test Step": case.get("Test Case ID", ""),  # Test Step = Test Case ID
+                "Test Type": "Manual",  # Always "Manual"
+                "Test Summary": case.get("Test Case Name", ""),  # Test Summary = Test Case Name
+                "Test Data": json.dumps(case.get("Test Data", {})),  # Convert dictionary to JSON string
+                "Expected Result": case.get("Expected Result", "")
+            })
+
+    return filename  # Return filename for download
 
 @app.route('/')
 def home():
@@ -82,19 +97,27 @@ def generate():
         return jsonify({"error": ai_output}), 500
 
     parsed_test_cases = parse_test_cases(ai_output)
-    if "error" in parsed_test_cases:
-        return jsonify({"error": parsed_test_cases["error"]}), 500
+    if parsed_test_cases is None:
+        return jsonify({"error": "Failed to parse AI response into JSON."}), 500
 
-    # Save the final JSON body in a variable
-    json_payload = json.dumps(parsed_test_cases, indent=4)
-    
-    # Log the generated JSON payload (for debugging purposes)
-    print("JSONPayload:\n", json_payload)
+    # Save test cases as CSV with a dynamic filename
+    csv_filename = save_as_csv(parsed_test_cases)
 
+    # Provide JSON response before downloading
     return jsonify({
-        "message": "Test cases generated and saved.",
-        "json_payload": json_payload
+        "message": "Test cases generated successfully!",
+        "csv_filename": csv_filename
     })
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """
+    Endpoint to download the generated CSV file.
+    """
+    try:
+        return send_file(filename, as_attachment=True)
+    except FileNotFoundError:
+        return jsonify({"error": "File not found."}), 404
 
 if __name__ == "__main__":
     app.run(debug=True)
