@@ -57,14 +57,56 @@ def parse_test_cases(ai_output):
         return {"error": f"Error parsing AI output: {str(e)}"}
 
 
-def save_as_csv(test_cases):
+# def save_as_csv(test_cases):
+#     """
+#     Saves parsed test cases to a CSV file inside the Jenkins workspace.
+#     """
+
+    
+
+#     WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
+#     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#     filename = f"test_cases_{timestamp}.csv"
+    
+#     # Save directly inside Jenkins workspace
+#     filepath = os.path.join(WORKSPACE, filename)
+
+#     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
+
+#     try:
+#         with open(filepath, mode="w", newline="", encoding="utf-8") as file:
+#             writer = csv.DictWriter(file, fieldnames=csv_headers)
+#             writer.writeheader()
+
+#             for index, case in enumerate(test_cases, start=1):
+#                 writer.writerow({
+#                     "Test Case No": index,
+#                     "Test Step": case.get("Test Case ID", ""),
+#                     "Test Type": "Manual",
+#                     "Test Summary": case.get("Test Case Name", ""),
+#                     "Test Data": json.dumps(case.get("Test Data", {})),
+#                     "Expected Result": json.dumps(case.get("Expected Result", {}))
+#                 })
+
+#         return filepath  # Return full path directly inside Jenkins workspace
+    
+#     except Exception as e:
+#         return {"error": f"Error saving CSV: {str(e)}"}
+    
+
+def save_as_csv(test_cases, user_filename):
     """
     Saves parsed test cases to a CSV file inside the Jenkins workspace.
-    """
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"test_cases_{timestamp}.csv"
     
-    # Save directly inside Jenkins workspace
+    :param test_cases: List of test cases to be saved
+    :param user_filename: The base filename provided by the user (without extension)
+    :return: Full file path or error message
+    """
+    
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"{user_filename}_{timestamp}.csv"  # Append timestamp to user-provided filename
+    
+    WORKSPACE = "/var/lib/jenkins/workspace/Test_Suit/"  # Define your Jenkins workspace path
     filepath = os.path.join(WORKSPACE, filename)
 
     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
@@ -84,11 +126,10 @@ def save_as_csv(test_cases):
                     "Expected Result": json.dumps(case.get("Expected Result", {}))
                 })
 
-        return filepath  # Return full path directly inside Jenkins workspace
+        return filepath  # Return the full file path
     
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
-    
 
 @app.route('/')
 def home():
