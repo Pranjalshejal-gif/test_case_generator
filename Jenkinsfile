@@ -70,11 +70,6 @@ pipeline {
             }
         }
 
-        stage('Save Generated CSV File') {
-            steps {
-                archiveArtifacts artifacts: "${env.GENERATED_CSV}", allowEmptyArchive: false
-            }
-        }
     }
 
     post {
