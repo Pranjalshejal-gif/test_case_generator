@@ -33,8 +33,8 @@ pipeline {
                     // Call API and capture JSON response
                     def response = sh(
                         script: """curl -s -X POST http://127.0.0.1:5000/generate \
-                        -H 'Content-Type: application/json' \
-                        -d '{\"topic\": \"${params.TEST_TOPIC}\", \"num_cases\": ${params.NUM_CASES}}'""",
+                        -H "Content-Type: application/json" \
+                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'""",
                         returnStdout: true
                     ).trim()
 
@@ -45,13 +45,13 @@ pipeline {
                         error "Flask API did not return success message!"
                     }
 
-                    // Extract CSV filename safely
+                    // Extract CSV filename using jq (safer than grep)
                     def csvFilename = sh(
-                        script: "echo '${response}' | grep -oP '(?<=\\\"csv_filename\\\": \\\")([^\\\"]+)'",
+                        script: "echo '${response}' | jq -r '.csv_filename'",
                         returnStdout: true
                     ).trim()
 
-                    if (!csvFilename) {
+                    if (!csvFilename || csvFilename == "null") {
                         error "Failed to extract CSV filename from API response."
                     }
 
