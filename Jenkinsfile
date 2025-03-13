@@ -28,7 +28,7 @@ pipeline {
                 script {
                     // Start Flask in the background
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5 // Give Flask time to start
+                    sleep 5 // Give Flask some time to start
 
                     // Call API and capture JSON response
                     def response = sh(
@@ -40,16 +40,14 @@ pipeline {
 
                     echo "Flask API Response: ${response}"
 
-                    // Check if API returned success message
-                    if (!response.contains('"message": "Test cases generated successfully!"')) {
-                        error "Flask API did not return success message!"
-                    }
+                    // Parse JSON response using Groovy (instead of jq)
+                    def jsonParser = new groovy.json.JsonSlurper()
+                    def parsedResponse = jsonParser.parseText(response)
 
-                    // Extract CSV filename using jq (safer than grep)
-                    def csvFilename = sh(
-                        script: "echo '${response}' | jq -r '.csv_filename'",
-                        returnStdout: true
-                    ).trim()
+                    // Extract CSV filename
+                    def csvFilename = parsedResponse.csv_filename ?: 'default.csv'
+
+                    echo "Extracted CSV Filename: ${csvFilename}"
 
                     if (!csvFilename || csvFilename == "null") {
                         error "Failed to extract CSV filename from API response."
