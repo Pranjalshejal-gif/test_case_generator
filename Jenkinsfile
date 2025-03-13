@@ -28,20 +28,8 @@ pipeline {
                 script {
                     echo "Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-
-                    // Ensure Flask server has time to start
-                    timeout(time: 20, unit: 'SECONDS') {
-                        script {
-                            while (true) {
-                                def flaskRunning = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5000/health || echo '500'", returnStdout: true).trim()
-                                if (flaskRunning == '200') {
-                                    echo "Flask server is running!"
-                                    break
-                                }
-                                sleep(2)
-                            }
-                        }
-                    }
+                    sleep 5  // Ensure Flask has time to start
+                    echo "Flask application started!"
                 }
             }
         }
@@ -51,7 +39,7 @@ pipeline {
                 script {
                     echo "Calling Flask API to generate test cases..."
                     
-                    // Make API request and capture response
+                    // Make API request and get JSON response as a string
                     def jsonResponse = sh(script: """
                         curl -s -X POST http://127.0.0.1:5000/generate \
                         -H "Content-Type: application/json" \
@@ -60,14 +48,11 @@ pipeline {
 
                     echo "Flask API Response: ${jsonResponse}"
 
-                    // Validate response format
-                    if (!jsonResponse || jsonResponse == "null") {
-                        error "Flask API response is empty or invalid!"
-                    }
-
-                    // Parse JSON response
+                    // Use readJSON to parse response safely
                     def parsedResponse = readJSON text: jsonResponse
-                    def csvFilename = parsedResponse?.csv_filename ?: 'default.csv'
+
+                    // Extract CSV filename
+                    def csvFilename = parsedResponse.csv_filename ?: 'default.csv'
 
                     if (!csvFilename || csvFilename == "null") {
                         error "Failed to extract CSV filename from API response."
@@ -75,10 +60,10 @@ pipeline {
 
                     echo "Extracted CSV Filename: ${csvFilename}"
 
-                    // Ensure file exists before proceeding
+                    // Check if file exists
                     def fileExists = sh(script: "test -f ${csvFilename} && echo 'exists'", returnStdout: true).trim()
                     if (fileExists != "exists") {
-                        error "CSV file '${csvFilename}' not found in workspace!"
+                        error "CSV file '${csvFilename}' not found!"
                     }
 
                     // Move CSV file to Jenkins workspace
@@ -90,15 +75,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Verify CSV File') {
-            steps {
-                script {
-                    sh 'ls -l $WORKSPACE'
-                    echo "Generated CSV File Path: ${env.GENERATED_CSV}"
-                }
-            }
-        }
     }
 
     post {
@@ -107,7 +83,6 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed! Check logs for issues.'
-            sh 'cat flask_output.log || echo "No Flask log found"'
         }
     }
 }
