@@ -10,7 +10,7 @@ pipeline {
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
     }
-FILE_NAME
+
     stages {
         stage('Clone Repository') {
             steps {
