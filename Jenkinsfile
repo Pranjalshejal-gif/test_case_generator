@@ -37,45 +37,40 @@ pipeline {
         stage('Generate Test Cases') {
             steps {
                 script {
-                    echo "Calling Flask API to generate test cases..."
-                    
-                    // Make API request and get JSON response as a string
+                   echo "Calling Flask API to generate test cases..."
+            
+            // Make API request and get JSON response as a string
                     def jsonResponse = sh(script: """
-                        curl -s -X POST http://127.0.0.1:5000/generate \
-                        -H "Content-Type: application/json" \
-                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'
-                    """, returnStdout: true).trim()
+                curl -s -X POST http://127.0.0.1:5000/generate \
+                -H "Content-Type: application/json" \
+                -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'
+            """, returnStdout: true).trim()
 
-                    echo "Flask API Response: ${jsonResponse}"
+                   echo "Flask API Response: ${jsonResponse}"
 
-                    // Use readJSON to parse response safely
-                    def parsedResponse = readJSON text: jsonResponse
+            // Parse API response
+            def parsedResponse = readJSON text: jsonResponse
 
-                    // Extract CSV filename and path
-                    def csvFilename = parsedResponse.csv_filename ?: 'default.csv'
-                    def csvFilepath = parsedResponse.csv_filepath ?: ''
+            // Extract CSV file path
+            def csvFilepath = parsedResponse.csv_filepath ?: ''
 
-                    if (!csvFilepath || csvFilepath == "null") {
-                        error "Failed to extract CSV filepath from API response."
-                    }
-
-                    echo "Extracted CSV Filepath: ${csvFilepath}"
-
-                    // Check if file exists
-                    def fileExists = sh(script: "test -f ${csvFilepath} && echo 'exists'", returnStdout: true).trim()
-                    if (fileExists != "exists") {
-                        error "CSV file '${csvFilepath}' not found!"
-                    }
-
-                    // Move CSV file to Jenkins workspace
-                    sh "mv ${csvFilepath} ${WORKSPACE}/"
-                    echo "CSV file saved in Jenkins workspace: ${WORKSPACE}/${csvFilename}"
-
-                    // Set environment variable for later stages
-                    env.GENERATED_CSV = "${WORKSPACE}/${csvFilename}"
-                }
+            if (!csvFilepath || csvFilepath == "null") {
+                error "Failed to extract CSV filepath from API response."
             }
+
+            echo "CSV file generated: ${csvFilepath}"
+
+            // Check if the file exists
+            def fileExists = sh(script: "test -f ${csvFilepath} && echo 'exists'", returnStdout: true).trim()
+            if (fileExists != "exists") {
+                error "CSV file '${csvFilepath}' not found!"
+            }
+
+            echo "CSV file is successfully stored in Jenkins workspace!"
         }
+    }
+}
+
     }
 
     post {

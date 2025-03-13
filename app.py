@@ -12,7 +12,8 @@ app = Flask(__name__)
 genai.configure(api_key="AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04")
 
 # Ensure CSV files are saved inside Jenkins workspace
-WORKSPACE = os.getenv("WORKSPACE", os.getcwd())
+# WORKSPACE = os.getenv("WORKSPACE", os.getcwd())
+WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")  # Default Jenkins workspace path
 
 def generate_test_cases(prompt, num_cases=5):
     """
@@ -55,12 +56,15 @@ def parse_test_cases(ai_output):
     except (json.JSONDecodeError, ValueError) as e:
         return {"error": f"Error parsing AI output: {str(e)}"}
 
+
 def save_as_csv(test_cases):
     """
-    Saves parsed test cases to a CSV file inside Jenkins workspace.
+    Saves parsed test cases to a CSV file inside the Jenkins workspace.
     """
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"test_cases_{timestamp}.csv"
+    
+    # Save directly inside Jenkins workspace
     filepath = os.path.join(WORKSPACE, filename)
 
     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
@@ -80,10 +84,11 @@ def save_as_csv(test_cases):
                     "Expected Result": json.dumps(case.get("Expected Result", {}))
                 })
 
-        return filepath  # Return full path
+        return filepath  # Return full path directly inside Jenkins workspace
     
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
+    
 
 @app.route('/')
 def home():
