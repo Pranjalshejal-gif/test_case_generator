@@ -35,22 +35,31 @@ pipeline {
                         script: """
                         curl -X POST http://127.0.0.1:5000/generate \
                         -H 'Content-Type: application/json' \
-                        -d '{\"topic\": \"${params.TEST_TOPIC}\", \"num_cases\": ${params.NUM_CASES}}'
+                        -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}}'
                         """,
                         returnStdout: true
                     ).trim()
                     echo "Flask API Response: ${response}"
 
-                    // Extract CSV filename from response using jq
+                    // Extract CSV filename using shell command (grep & sed)
                     def csvFilename = sh(
                         script: """
-                        echo '${response}' | jq -r '.file_name'
+                        echo '${response}' | grep -oP '"csv_filename":\s*"\K[^"]+'
                         """,
                         returnStdout: true
                     ).trim()
 
-                    env.GENERATED_CSV = csvFilename
+                    // Alternative: Extract CSV filename using Python
+                    if (!csvFilename) {
+                        csvFilename = sh(
+                            script: """
+                            echo '${response}' | python3 -c 'import sys, json; print(json.load(sys.stdin)["csv_filename"])'
+                            """,
+                            returnStdout: true
+                        ).trim()
+                    }
 
+                    env.GENERATED_CSV = csvFilename
                     sleep 5 // Ensure Flask has completed writing the file
 
                     if (!fileExists(csvFilename)) {
