@@ -25,59 +25,63 @@ def generate_test_cases(prompt, num_cases=5):
         - "Test Data": The input data.
         - "Expected Result": The expected outcome.
 
-        Return the response strictly as a **JSON array**, without any code block formatting.
+        Return ONLY the JSON array, without any code block formatting or additional text.
         """
         response = model.generate_content(detailed_prompt)
 
-        # Ensure response is valid
-        return response.text if response and response.text else "No response received."
+        if not response or not response.text:
+            return {"error": "No response received from AI."}
+        
+        return response.text.strip()
     
     except Exception as e:
-        return f"Error generating test cases: {str(e)}"
+        return {"error": f"Error generating test cases: {str(e)}"}
 
 def parse_test_cases(ai_output):
     """
     Parses AI output into a structured JSON list.
     """
     try:
-        # Remove unwanted code block markers (```json ... ```)
+        # Remove unwanted code block markers if they exist
         cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
 
         # Validate if response is a proper JSON array
         if cleaned_output.startswith("[") and cleaned_output.endswith("]"):
             return json.loads(cleaned_output)
         else:
-            raise ValueError("AI response is not a valid JSON array.")
+            return {"error": "AI response is not a valid JSON array."}
     
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"Error parsing AI output: {e}")
-        return None
+        return {"error": f"Error parsing AI output: {str(e)}"}
 
 def save_as_csv(test_cases):
     """
     Saves parsed test cases to a CSV file with a timestamped filename.
     """
-    # Generate filename with current date and time
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"test_cases_{timestamp}.csv"
 
     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
 
-    with open(filename, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=csv_headers)
-        writer.writeheader()
+    try:
+        with open(filename, mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=csv_headers)
+            writer.writeheader()
 
-        for index, case in enumerate(test_cases, start=1):
-            writer.writerow({
-                "Test Case No": index,
-                "Test Step": case.get("Test Case ID", ""),  # Test Step = Test Case ID
-                "Test Type": "Manual",  # Always "Manual"
-                "Test Summary": case.get("Test Case Name", ""),  # Test Summary = Test Case Name
-                "Test Data": json.dumps(case.get("Test Data", {})),  # Convert dictionary to JSON string
-                "Expected Result": case.get("Expected Result", "")
-            })
+            for index, case in enumerate(test_cases, start=1):
+                writer.writerow({
+                    "Test Case No": index,
+                    "Test Step": case.get("Test Case ID", ""),
+                    "Test Type": "Manual",
+                    "Test Summary": case.get("Test Case Name", ""),
+                    "Test Data": json.dumps(case.get("Test Data", {})),
+                    "Expected Result": json.dumps(case.get("Expected Result", {}))
+                })
 
-    return filename  # Return filename for download
+        return filename  # Return filename for download
+    
+    except Exception as e:
+        return {"error": f"Error saving CSV: {str(e)}"}
 
 @app.route('/')
 def home():
@@ -93,20 +97,24 @@ def generate():
         return jsonify({"error": "No topic provided. Please provide a topic."}), 400
 
     ai_output = generate_test_cases(topic, num_cases)
-    if "Error" in ai_output or "No response" in ai_output:
-        return jsonify({"error": ai_output}), 500
+
+    if isinstance(ai_output, dict) and "error" in ai_output:
+        return jsonify(ai_output), 500
 
     parsed_test_cases = parse_test_cases(ai_output)
-    if parsed_test_cases is None:
-        return jsonify({"error": "Failed to parse AI response into JSON."}), 500
+    
+    if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
+        return jsonify(parsed_test_cases), 500
 
-    # Save test cases as CSV with a dynamic filename
     csv_filename = save_as_csv(parsed_test_cases)
+    
+    if isinstance(csv_filename, dict) and "error" in csv_filename:
+        return jsonify(csv_filename), 500
 
-    # Provide JSON response before downloading
     return jsonify({
         "message": "Test cases generated successfully!",
-        "csv_filename": csv_filename
+        "csv_filename": csv_filename,
+        "test_cases": parsed_test_cases
     })
 
 @app.route('/download/<filename>')
