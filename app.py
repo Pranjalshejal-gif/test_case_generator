@@ -4,7 +4,7 @@ import json
 import re
 import csv
 import os
-import PyPDF2
+import fitz  # PyMuPDF for PDF text extraction
 from datetime import datetime
 
 app = Flask(__name__)
@@ -18,15 +18,16 @@ WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 
 def extract_text_from_pdf(pdf_path):
     """
-    Extract text content from a given PDF file.
+    Extracts text content from a PDF file.
     """
     try:
-        with open(pdf_path, "rb") as file:
-            reader = PyPDF2.PdfReader(file)
-            text = "".join([page.extract_text() for page in reader.pages if page.extract_text()])
-        return text
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page in doc:
+            text += page.get_text("text") + "\n"
+        return text.strip() if text else None
     except Exception as e:
-        return {"error": f"Error reading PDF: {str(e)}"}
+        return None
 
 def generate_test_cases(prompt, num_cases=5):
     """
@@ -100,41 +101,72 @@ def home():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    if 'file' in request.files:  # Handle PDF input
-        file = request.files['file']
-        if file.filename.endswith('.pdf'):
-            pdf_path = os.path.join(WORKSPACE, file.filename)
-            file.save(pdf_path)
-            extracted_text = extract_text_from_pdf(pdf_path)
-            if isinstance(extracted_text, dict) and "error" in extracted_text:
-                return jsonify(extracted_text), 500
-            topic = request.form.get("topic", "Extracted PDF Content")
-        else:
-            return jsonify({"error": "Unsupported file format. Only PDFs are allowed."}), 400
-    else:  # Handle text input
-        data = request.json
-        topic = data.get("topic")
-        if not topic:
-            return jsonify({"error": "No topic provided. Please provide a topic."}), 400
-        extracted_text = topic  # Use text input directly
-    
-    num_cases = int(request.form.get("num_cases", request.json.get("num_cases", 5)))
-    user_filename = request.form.get("filename", request.json.get("filename", "test_cases"))
-    
-    ai_output = generate_test_cases(extracted_text, num_cases)
+    """
+    Handles test case generation based on text input.
+    """
+    data = request.json
+    topic = data.get("topic")
+    num_cases = int(data.get("num_cases", 5))
+    user_filename = data.get("filename", "test_cases")  # Get filename from user input
+
+    if not topic:
+        return jsonify({"error": "No topic provided. Please provide a topic."}), 400
+
+    ai_output = generate_test_cases(topic, num_cases)
     if isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify(ai_output), 500
-    
+
     parsed_test_cases = parse_test_cases(ai_output)
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
-    
+
     csv_filepath = save_as_csv(parsed_test_cases, user_filename)
     if isinstance(csv_filepath, dict) and "error" in csv_filepath:
         return jsonify(csv_filepath), 500
-    
+
     return jsonify({
         "message": "Test cases generated successfully!",
+        "csv_filename": os.path.basename(csv_filepath),
+        "csv_filepath": csv_filepath
+    })
+
+@app.route('/generate_pdf', methods=['POST'])
+def generate_from_pdf():
+    """
+    Handles test case generation based on an uploaded PDF file.
+    """
+    if 'pdf_file' not in request.files:
+        return jsonify({"error": "No PDF file provided."}), 400
+
+    pdf_file = request.files['pdf_file']
+    user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
+    num_cases = int(request.form.get("num_cases", 5))
+    user_filename = request.form.get("filename", "test_cases")
+
+    # Save uploaded PDF
+    pdf_path = os.path.join(WORKSPACE, pdf_file.filename)
+    pdf_file.save(pdf_path)
+
+    # Extract text from PDF
+    extracted_text = extract_text_from_pdf(pdf_path)
+    if not extracted_text:
+        return jsonify({"error": "Could not extract text from the uploaded PDF."}), 500
+
+    # Generate test cases using extracted text
+    ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
+    if isinstance(ai_output, dict) and "error" in ai_output:
+        return jsonify(ai_output), 500
+
+    parsed_test_cases = parse_test_cases(ai_output)
+    if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
+        return jsonify(parsed_test_cases), 500
+
+    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
+    if isinstance(csv_filepath, dict) and "error" in csv_filepath:
+        return jsonify(csv_filepath), 500
+
+    return jsonify({
+        "message": "Test cases generated successfully from PDF!",
         "csv_filename": os.path.basename(csv_filepath),
         "csv_filepath": csv_filepath
     })

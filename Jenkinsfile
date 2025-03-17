@@ -6,10 +6,10 @@ pipeline {
     }
 
     parameters {
-        string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic')
+        string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic (optional if using PDF)')
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
-        string(name: 'PDF_FILE', defaultValue: '', description: 'Path to PDF file (optional)')
+        file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation (optional)') // File Parameter
     }
 
     stages {
@@ -36,16 +36,19 @@ pipeline {
             }
         }
 
-        stage('Generate Test Cases') {
+        stage('Check for Uploaded PDF') {
             steps {
                 script {
-                    echo "Calling Flask API to generate test cases..."
+                    def pdfFilePath = "${WORKSPACE}/${PDF_FILE}" // Dynamic PDF filename
 
-                    if (params.PDF_FILE?.trim()) {
-                        // If PDF file is provided, use multipart/form-data
+                    if (fileExists(pdfFilePath)) {
+                        echo "PDF file detected: ${pdfFilePath}"
+                        echo "Extracting test cases based on PDF content..."
+
+                        // Call Flask API for PDF processing
                         def jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
-                            -F "pdf_file=@${params.PDF_FILE}" \
+                            -F "pdf_file=@${pdfFilePath}" \
                             -F "prompt=${params.TEST_TOPIC}" \
                             -F "num_cases=${params.NUM_CASES}" \
                             -F "filename=${params.CSV_FILENAME}"
@@ -53,7 +56,9 @@ pipeline {
 
                         echo "Flask API Response: ${jsonResponse}"
                     } else {
-                        // Use normal text-based test case generation
+                        echo "No PDF uploaded, generating test cases from text..."
+                        
+                        // Call Flask API for text-based test case generation
                         def jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate \
                             -H "Content-Type: application/json" \
