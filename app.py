@@ -4,6 +4,7 @@ import json
 import re
 import csv
 import os
+import PyPDF2
 from datetime import datetime
 
 app = Flask(__name__)
@@ -14,6 +15,18 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Define Jenkins workspace path
 WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
+
+def extract_text_from_pdf(pdf_path):
+    """
+    Extract text content from a given PDF file.
+    """
+    try:
+        with open(pdf_path, "rb") as file:
+            reader = PyPDF2.PdfReader(file)
+            text = "".join([page.extract_text() for page in reader.pages if page.extract_text()])
+        return text
+    except Exception as e:
+        return {"error": f"Error reading PDF: {str(e)}"}
 
 def generate_test_cases(prompt, num_cases=5):
     """
@@ -87,26 +100,39 @@ def home():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    data = request.json
-    topic = data.get("topic")
-    num_cases = int(data.get("num_cases", 5))
-    user_filename = data.get("filename", "test_cases")  # Get filename from user input
-
-    if not topic:
-        return jsonify({"error": "No topic provided. Please provide a topic."}), 400
-
-    ai_output = generate_test_cases(topic, num_cases)
+    if 'file' in request.files:  # Handle PDF input
+        file = request.files['file']
+        if file.filename.endswith('.pdf'):
+            pdf_path = os.path.join(WORKSPACE, file.filename)
+            file.save(pdf_path)
+            extracted_text = extract_text_from_pdf(pdf_path)
+            if isinstance(extracted_text, dict) and "error" in extracted_text:
+                return jsonify(extracted_text), 500
+            topic = request.form.get("topic", "Extracted PDF Content")
+        else:
+            return jsonify({"error": "Unsupported file format. Only PDFs are allowed."}), 400
+    else:  # Handle text input
+        data = request.json
+        topic = data.get("topic")
+        if not topic:
+            return jsonify({"error": "No topic provided. Please provide a topic."}), 400
+        extracted_text = topic  # Use text input directly
+    
+    num_cases = int(request.form.get("num_cases", request.json.get("num_cases", 5)))
+    user_filename = request.form.get("filename", request.json.get("filename", "test_cases"))
+    
+    ai_output = generate_test_cases(extracted_text, num_cases)
     if isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify(ai_output), 500
-
+    
     parsed_test_cases = parse_test_cases(ai_output)
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
-
+    
     csv_filepath = save_as_csv(parsed_test_cases, user_filename)
     if isinstance(csv_filepath, dict) and "error" in csv_filepath:
         return jsonify(csv_filepath), 500
-
+    
     return jsonify({
         "message": "Test cases generated successfully!",
         "csv_filename": os.path.basename(csv_filepath),
