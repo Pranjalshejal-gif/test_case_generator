@@ -9,7 +9,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Hardcoded Gemini API Key (Replace with secure method in production)
+# Hardcoded Gemini API Key (Not recommended for production)
 GEMINI_API_KEY = "AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04"
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -18,7 +18,7 @@ WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 
 
 def extract_text_from_pdf(pdf_path):
-    """Extracts text from a PDF file."""
+    """Extracts text content from a PDF file."""
     try:
         doc = fitz.open(pdf_path)
         text = "".join(page.get_text("text") + "\n" for page in doc).strip()
@@ -28,7 +28,7 @@ def extract_text_from_pdf(pdf_path):
 
 
 def generate_test_cases(prompt, num_cases=5):
-    """Generates test cases using Google Gemini AI."""
+    """Generate detailed test cases using Google Gemini AI, formatted as JSON."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
         detailed_prompt = f"""
@@ -56,7 +56,7 @@ def parse_test_cases(ai_output):
 
 
 def save_as_csv(test_cases, user_filename):
-    """Saves test cases to a CSV file inside the Jenkins workspace."""
+    """Saves parsed test cases to a CSV file inside the Jenkins workspace."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
@@ -85,31 +85,17 @@ def home():
     return render_template('index.html')
 
 
-@app.route('/generate_test_cases', methods=['POST'])
-def generate_test_cases_api():
-    """Handles test case generation from user input or PDF."""
-    pdf_file = request.files.get("pdf_file")  # Get uploaded PDF file
-    user_prompt = request.form.get("prompt", "").strip()
-    num_cases = int(request.form.get("num_cases", 5))
+@app.route('/generate', methods=['POST'])
+def generate():
+    data = request.json
+    topic = data.get("topic")
+    num_cases = int(data.get("num_cases", 5))
+    user_filename = data.get("filename", "test_cases")
 
-    if pdf_file and pdf_file.filename:  # If PDF is provided
-        pdf_filename = pdf_file.filename
-        filename_without_ext = os.path.splitext(pdf_filename)[0]
-        pdf_path = os.path.join(WORKSPACE, pdf_filename)
-        pdf_file.save(pdf_path)
+    if not topic:
+        return jsonify({"error": "No topic provided."}), 400
 
-        extracted_text = extract_text_from_pdf(pdf_path)
-        if not extracted_text:
-            return jsonify({"error": "Could not extract text from the uploaded PDF."}), 500
-
-        ai_input = f"{user_prompt}\n{extracted_text}" if user_prompt else extracted_text
-    else:  # If no PDF, use text input
-        if not user_prompt:
-            return jsonify({"error": "No input provided. Please upload a PDF or enter text."}), 400
-        ai_input = user_prompt
-
-    # Generate test cases
-    ai_output = generate_test_cases(ai_input, num_cases)
+    ai_output = generate_test_cases(topic, num_cases)
     if isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify(ai_output), 500
 
@@ -117,14 +103,38 @@ def generate_test_cases_api():
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
 
-    filename = filename_without_ext if pdf_file else "test_cases_from_text"
-    csv_filepath = save_as_csv(parsed_test_cases, filename)
+    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
+    return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
-    return jsonify({
-        "message": "Test cases generated successfully!",
-        "csv_filename": os.path.basename(csv_filepath),
-        "csv_filepath": csv_filepath
-    })
+
+@app.route('/generate_pdf', methods=['POST'])
+def generate_from_pdf():
+    if 'pdf_file' not in request.files:
+        return jsonify({"error": "No PDF file provided."}), 400
+
+    pdf_file = request.files['pdf_file']
+    pdf_filename = pdf_file.filename
+    filename_without_ext = os.path.splitext(pdf_filename)[0]
+    pdf_path = os.path.join(WORKSPACE, pdf_filename)
+    pdf_file.save(pdf_path)
+
+    extracted_text = extract_text_from_pdf(pdf_path)
+    if not extracted_text:
+        return jsonify({"error": "Could not extract text from the uploaded PDF."}), 500
+
+    num_cases = int(request.form.get("num_cases", 5))
+    user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
+
+    ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
+    if isinstance(ai_output, dict) and "error" in ai_output:
+        return jsonify(ai_output), 500
+
+    parsed_test_cases = parse_test_cases(ai_output)
+    if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
+        return jsonify(parsed_test_cases), 500
+
+    csv_filepath = save_as_csv(parsed_test_cases, filename_without_ext)
+    return jsonify({"message": "Test cases generated successfully from PDF!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
 
 @app.route('/health', methods=['GET'])
