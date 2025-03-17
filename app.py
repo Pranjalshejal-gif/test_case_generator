@@ -9,10 +9,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Configure the Gemini API Key (Use environment variable for security)
-GEMINI_API_KEY = os.getenv("AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04")
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY is not set in the environment")
+# Hardcoded Gemini API Key (Not recommended for production)
+GEMINI_API_KEY = "AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04"
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Define Jenkins workspace path
@@ -20,21 +18,17 @@ WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 
 
 def extract_text_from_pdf(pdf_path):
-    """
-    Extracts text content from a PDF file.
-    """
+    """Extracts text content from a PDF file."""
     try:
         doc = fitz.open(pdf_path)
         text = "".join(page.get_text("text") + "\n" for page in doc).strip()
         return text if text else None
-    except Exception as e:
+    except Exception:
         return None
 
 
 def generate_test_cases(prompt, num_cases=5):
-    """
-    Generate detailed test cases using Google Gemini AI, formatted as JSON.
-    """
+    """Generate detailed test cases using Google Gemini AI, formatted as JSON."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
         detailed_prompt = f"""
@@ -53,9 +47,7 @@ def generate_test_cases(prompt, num_cases=5):
 
 
 def parse_test_cases(ai_output):
-    """
-    Parses AI output into a structured JSON list.
-    """
+    """Parses AI output into a structured JSON list."""
     try:
         cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
         return json.loads(cleaned_output) if cleaned_output.startswith("[") and cleaned_output.endswith("]") else {"error": "Invalid JSON format."}
@@ -64,9 +56,7 @@ def parse_test_cases(ai_output):
 
 
 def save_as_csv(test_cases, user_filename):
-    """
-    Saves parsed test cases to a CSV file inside the Jenkins workspace.
-    """
+    """Saves parsed test cases to a CSV file inside the Jenkins workspace."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
