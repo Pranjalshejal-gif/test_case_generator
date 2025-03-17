@@ -9,7 +9,7 @@ pipeline {
         string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic (optional if using PDF)')
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
-        file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation (optional)') // File Parameter
+        file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation (optional)') 
     }
 
     stages {
@@ -21,8 +21,8 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'pip install pymupdf' 
+                sh 'pip install --user -r requirements.txt'
+                sh 'pip install --user pymupdf' 
             }
         }
 
@@ -31,8 +31,15 @@ pipeline {
                 script {
                     echo "Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 10  // Ensure Flask has time to fully start
-                    echo "Flask application started!"
+                    sleep 5  
+
+                    // Ensure Flask server is running
+                    def flaskRunning = sh(script: "curl -s http://127.0.0.1:5000/health || echo 'down'", returnStdout: true).trim()
+                    if (flaskRunning == "down") {
+                        error "Flask server failed to start!"
+                    }
+
+                    echo "Flask application started successfully!"
                 }
             }
         }
@@ -40,14 +47,14 @@ pipeline {
         stage('Check for Uploaded PDF') {
             steps {
                 script {
-                    def pdfFilePath = "${WORKSPACE}/${PDF_FILE}" // Dynamic PDF filename
+                    def pdfFilePath = "${WORKSPACE}/${PDF_FILE}" 
+                    def jsonResponse = ""
 
                     if (fileExists(pdfFilePath)) {
                         echo "PDF file detected: ${pdfFilePath}"
-                        echo "Extracting test cases based on PDF content..."
+                        echo "Extracting test cases from PDF..."
 
-                        // Call Flask API for PDF processing
-                        def jsonResponse = sh(script: """
+                        jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
                             -F "pdf_file=@${pdfFilePath}" \
                             -F "prompt=${params.TEST_TOPIC}" \
@@ -55,20 +62,19 @@ pipeline {
                             -F "filename=${params.CSV_FILENAME}"
                         """, returnStdout: true).trim()
 
-                        echo "Flask API Response: ${jsonResponse}"
                     } else {
                         echo "No PDF uploaded, generating test cases from text..."
                         
-                        // Call Flask API for text-based test case generation
-                        def jsonResponse = sh(script: """
+                        jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate \
                             -H "Content-Type: application/json" \
                             -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}, "filename": "${params.CSV_FILENAME}"}'
                         """, returnStdout: true).trim()
-
-                        echo "Flask API Response: ${jsonResponse}"
                     }
 
+                    echo "Flask API Response: ${jsonResponse}"
+
+                    // Parse JSON safely
                     def parsedResponse = readJSON text: jsonResponse
                     def csvFilepath = parsedResponse.csv_filepath ?: ''
 
