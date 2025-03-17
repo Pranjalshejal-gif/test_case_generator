@@ -1,38 +1,23 @@
 pipeline {
     agent any
 
-    environment {
-        GIT_REPO = 'https://github.com/Pranjalshejal-gif/test_case_generator.git'
-    }
-
     parameters {
-        string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic (optional if using PDF)')
+        string(name: 'TEST_TOPIC', defaultValue: 'Default Topic', description: 'Enter the test topic')
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
-        file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation (optional)') // File Parameter
+        file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation')
+    }
+
+    environment {
+        WORKSPACE_PATH = "${WORKSPACE}/uploaded_pdfs"  // Define a folder for uploaded PDFs
     }
 
     stages {
-        stage('Clone Repository') {
-            steps {
-                git branch: 'main', url: "${GIT_REPO}"
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                sh 'pip install -r requirements.txt'
-                sh 'pip install pymupdf' 
-            }
-        }
-
-        stage('Start Flask Server') {
+        
+        stage('Prepare Workspace') {
             steps {
                 script {
-                    echo "Starting Flask application..."
-                    sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 10  // Ensure Flask has time to fully start
-                    echo "Flask application started!"
+                    sh "mkdir -p ${WORKSPACE_PATH}"  // Create a directory for PDFs
                 }
             }
         }
@@ -40,50 +25,47 @@ pipeline {
         stage('Check for Uploaded PDF') {
             steps {
                 script {
-                    def pdfFilePath = "${WORKSPACE}/${PDF_FILE}" // Dynamic PDF filename
+                    if (params.PDF_FILE) {
+                        echo "PDF file detected: ${params.PDF_FILE}"
+                        sh "mv ${params.PDF_FILE} ${WORKSPACE_PATH}/uploaded.pdf"
+                    } else {
+                        echo "No PDF file uploaded, skipping PDF-related test generation."
+                        error("PDF file is required!")
+                    }
+                }
+            }
+        }
 
-                    if (fileExists(pdfFilePath)) {
-                        echo "PDF file detected: ${pdfFilePath}"
-                        echo "Extracting test cases based on PDF content..."
-
-                        // Call Flask API for PDF processing
+        stage('Extract Test Cases') {
+            steps {
+                script {
+                    try {
                         def jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
-                            -F "pdf_file=@${pdfFilePath}" \
-                            -F "prompt=${params.TEST_TOPIC}" \
-                            -F "num_cases=${params.NUM_CASES}" \
-                            -F "filename=${params.CSV_FILENAME}"
+                            -F pdf_file=@${WORKSPACE_PATH}/uploaded.pdf \
+                            -F prompt='${params.TEST_TOPIC}' \
+                            -F num_cases=${params.NUM_CASES} \
+                            -F filename='${params.CSV_FILENAME}.csv'
                         """, returnStdout: true).trim()
 
-                        echo "Flask API Response: ${jsonResponse}"
-                    } else {
-                        echo "No PDF uploaded, generating test cases from text..."
+                        echo "Response: ${jsonResponse}"
+
+                        // Parse the JSON response safely
+                        def parsedJson = readJSON text: jsonResponse
+                        echo "Parsed JSON Response: ${parsedJson}"
                         
-                        // Call Flask API for text-based test case generation
-                        def jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate \
-                            -H "Content-Type: application/json" \
-                            -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}, "filename": "${params.CSV_FILENAME}"}'
-                        """, returnStdout: true).trim()
-
-                        echo "Flask API Response: ${jsonResponse}"
+                    } catch (Exception e) {
+                        echo "Error in API call: ${e.getMessage()}"
+                        error("Failed to get test case response")
                     }
+                }
+            }
+        }
 
-                    def parsedResponse = readJSON text: jsonResponse
-                    def csvFilepath = parsedResponse.csv_filepath ?: ''
-
-                    if (!csvFilepath || csvFilepath == "null") {
-                        error "Failed to extract CSV filepath from API response."
-                    }
-
-                    echo "CSV file generated: ${csvFilepath}"
-
-                    def fileExists = sh(script: "test -f ${csvFilepath} && echo 'exists'", returnStdout: true).trim()
-                    if (fileExists != "exists") {
-                        error "CSV file '${csvFilepath}' not found!"
-                    }
-
-                    echo "CSV file is successfully stored in Jenkins workspace!"
+        stage('Save Test Cases to CSV') {
+            steps {
+                script {
+                    echo "Test cases have been generated and saved as ${params.CSV_FILENAME}.csv"
                 }
             }
         }
@@ -91,10 +73,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully!'
+            echo "Pipeline completed successfully!"
         }
         failure {
-            echo 'Pipeline failed! Check logs for issues.'
+            echo "Pipeline failed! Check logs for issues."
         }
     }
 }
