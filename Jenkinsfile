@@ -26,20 +26,22 @@ pipeline {
             }
         }
 
-        stage('Identify Where Jenkins Stores the Uploaded File') {
-            steps {
-                script {
-                    def pdfFilePath = sh(script: "find /tmp -name '${PDF_FILE}' | head -n 1", returnStdout: true).trim()
+         stage('Identify Where Jenkins Stores the Uploaded File') {
+             steps {
+            script {
+            def pdfFilePath = sh(script: "find /tmp -maxdepth 1 -type f -user jenkins -name '*.pdf' 2>/dev/null | head -n 1", returnStdout: true).trim()
 
-                    if (!pdfFilePath) {
-                        error "Uploaded PDF file not found in /tmp!"
-                    }
-
-                    echo "PDF file found at: ${pdfFilePath}"
-                    env.UPLOADED_PDF = pdfFilePath  // Store the path in an environment variable for later use
-                }
+            if (!pdfFilePath) {
+                error "Uploaded PDF file not found in /tmp!"
             }
+
+            echo "PDF file found at: ${pdfFilePath}"
+            env.UPLOADED_PDF = pdfFilePath  // Store the path in an environment variable for later use
         }
+    }
+}
+   
+
 
         stage('Start Flask Server') {
             steps {
