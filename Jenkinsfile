@@ -35,10 +35,10 @@ pipeline {
                         if (!fileExists(params.PDF_FILE_PATH)) {
                             error "❌ ERROR: PDF file not found at: ${params.PDF_FILE_PATH}"
                         }
-                        echo "✅ PDF file found: ${params.PDF_FILE_PATH}"
+                        echo " PDF file found: ${params.PDF_FILE_PATH}"
                         env.UPLOADED_PDF = params.PDF_FILE_PATH
                     } else {
-                        echo "⚠️ No PDF provided, generating test cases from text."
+                        echo " No PDF provided, generating test cases from text."
                     }
                 }
             }
@@ -47,7 +47,7 @@ pipeline {
         stage('Start Flask Server') {
             steps {
                 script {
-                    echo "🚀 Starting Flask application..."
+                    echo "Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
                     sleep 5  
 
@@ -63,10 +63,10 @@ pipeline {
                     }
 
                     if (flaskRunning == "down") {
-                        error "❌ ERROR: Flask server failed to start!"
+                        error " ERROR: Flask server failed to start!"
                     }
 
-                    echo "✅ Flask application started successfully!"
+                    echo " Flask application started successfully!"
                 }
             }
         }
@@ -97,17 +97,17 @@ pipeline {
                     echo "🔹 API Response: ${jsonResponse}"
 
                     if (!jsonResponse || jsonResponse.contains("404 Not Found") || jsonResponse.contains("500 Internal Server Error")) {
-                        error "❌ ERROR: API request failed. Check Flask logs."
+                        error " ERROR: API request failed. Check Flask logs."
                     }
 
                     def parsedResponse = readJSON text: jsonResponse
                     def csvFilepath = parsedResponse.csv_filepath ?: ''
 
                     if (!csvFilepath || csvFilepath == "null") {
-                        error "❌ ERROR: Failed to extract CSV filepath from API response."
+                        error "ERROR: Failed to extract CSV filepath from API response."
                     }
 
-                    echo "✅ CSV file generated: ${csvFilepath}"
+                    echo " CSV file generated: ${csvFilepath}"
                     env.GENERATED_CSV = csvFilepath
                 }
             }
@@ -116,14 +116,14 @@ pipeline {
         stage('Download Test Cases CSV') {
             steps {
                 script {
-                    echo "📥 Downloading generated CSV file..."
+                    echo " Downloading generated CSV file..."
                     def downloadResponse = sh(script: "curl -s -o ${params.CSV_FILENAME}.csv http://127.0.0.1:5000/download/${env.GENERATED_CSV} || echo 'error'", returnStdout: true).trim()
 
                     if (downloadResponse == "error") {
-                        error "❌ ERROR: Failed to download CSV file. Check Flask logs."
+                        error " ERROR: Failed to download CSV file. Check Flask logs."
                     }
 
-                    echo "✅ CSV file downloaded successfully!"
+                    echo "CSV file downloaded successfully!"
                 }
             }
         }
@@ -131,10 +131,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline executed successfully!'
+            echo ' Pipeline executed successfully!'
         }
         failure {
-            echo '❌ Pipeline failed! Check logs for issues.'
+            echo ' Pipeline failed! Check logs for issues.'
         }
     }
 }
