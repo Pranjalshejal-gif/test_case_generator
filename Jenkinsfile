@@ -26,6 +26,42 @@ pipeline {
             }
         }
 
+        stage('Identify Where Jenkins Stores the Uploaded File') {
+            steps {
+                script {
+                    def tempFilePath = sh(script: "find /tmp -name '${PDF_FILE}' 2>/dev/null | head -n 1", returnStdout: true).trim()
+                    if (!tempFilePath) {
+                        error "Uploaded file not found in Jenkins temporary directory."
+                    }
+                    echo "Uploaded PDF file found at: ${tempFilePath}"
+                    env.UPLOADED_PDF_PATH = tempFilePath
+                }
+            }
+        }
+
+        stage('Copy File from Temporary Location to Workspace') {
+            steps {
+                script {
+                    def workspaceFilePath = "${WORKSPACE}/uploaded_file.pdf"
+                    sh "cp '${env.UPLOADED_PDF_PATH}' '${workspaceFilePath}'"
+                    echo "PDF file copied to workspace: ${workspaceFilePath}"
+                }
+            }
+        }
+
+        stage('Verify the File in Jenkins Workspace') {
+            steps {
+                script {
+                    def workspaceFilePath = "${WORKSPACE}/uploaded_file.pdf"
+                    def fileExists = sh(script: "test -f '${workspaceFilePath}' && echo 'exists'", returnStdout: true).trim()
+                    if (fileExists != "exists") {
+                        error "PDF file not found in workspace!"
+                    }
+                    echo "PDF file verified in workspace: ${workspaceFilePath}"
+                }
+            }
+        }
+
         stage('Start Flask Server') {
             steps {
                 script {
@@ -33,7 +69,6 @@ pipeline {
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
                     sleep 5  
 
-                    // Ensure Flask server is running
                     def flaskRunning = sh(script: "curl -s http://127.0.0.1:5000/health || echo 'down'", returnStdout: true).trim()
                     if (flaskRunning == "down") {
                         error "Flask server failed to start!"
@@ -44,10 +79,10 @@ pipeline {
             }
         }
 
-        stage('Check for Uploaded PDF') {
+        stage('Process Uploaded PDF or Generate from Text') {
             steps {
                 script {
-                    def pdfFilePath = "${WORKSPACE}/${PDF_FILE}" 
+                    def pdfFilePath = "${WORKSPACE}/uploaded_file.pdf"
                     def jsonResponse = ""
 
                     if (fileExists(pdfFilePath)) {
@@ -74,7 +109,6 @@ pipeline {
 
                     echo "Flask API Response: ${jsonResponse}"
 
-                    // Parse JSON safely
                     def parsedResponse = readJSON text: jsonResponse
                     def csvFilepath = parsedResponse.csv_filepath ?: ''
 
@@ -97,7 +131,7 @@ pipeline {
         stage('Download Test Cases CSV') {
             steps {
                 script {
-                    if (fileExists("${WORKSPACE}/${PDF_FILE}")) {
+                    if (fileExists("${WORKSPACE}/uploaded_file.pdf")) {
                         echo "Downloading generated CSV file..."
                         sh "curl -O http://127.0.0.1:5000/download/${params.CSV_FILENAME}_*.csv"
                     } else {
