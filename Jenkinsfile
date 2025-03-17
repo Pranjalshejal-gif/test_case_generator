@@ -21,8 +21,10 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install --user -r requirements.txt'
-                sh 'pip install --user pymupdf'
+                sh '''
+                    pip install --user -r requirements.txt
+                    pip install --user pymupdf flask requests
+                '''
             }
         }
 
@@ -31,12 +33,12 @@ pipeline {
                 script {
                     if (params.PDF_FILE_PATH) {
                         if (!fileExists(params.PDF_FILE_PATH)) {
-                            error "ERROR: PDF file not found at: ${params.PDF_FILE_PATH}"
+                            error "❌ ERROR: PDF file not found at: ${params.PDF_FILE_PATH}"
                         }
-                        echo "✅ PDF file found at: ${params.PDF_FILE_PATH}"
+                        echo "✅ PDF file found: ${params.PDF_FILE_PATH}"
                         env.UPLOADED_PDF = params.PDF_FILE_PATH
                     } else {
-                        echo "⚠️ No PDF file provided, proceeding with text-based test case generation."
+                        echo "⚠️ No PDF provided, generating test cases from text."
                     }
                 }
             }
@@ -47,11 +49,12 @@ pipeline {
                 script {
                     echo "🚀 Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-
                     sleep 5  
 
-                    def flaskRunning = ""
-                    for (int i = 0; i < 3; i++) {
+                    def max_retries = 5
+                    def flaskRunning = "down"
+
+                    for (int i = 0; i < max_retries; i++) {
                         flaskRunning = sh(script: "curl -s http://127.0.0.1:5000/health || echo 'down'", returnStdout: true).trim()
                         if (flaskRunning != "down") {
                             break
@@ -68,7 +71,7 @@ pipeline {
             }
         }
 
-        stage('Process Uploaded PDF or Generate from Text') {
+        stage('Generate Test Cases') {
             steps {
                 script {
                     def jsonResponse = ""
@@ -82,9 +85,8 @@ pipeline {
                             -F "num_cases=${params.NUM_CASES}" \
                             -F "filename=${params.CSV_FILENAME}"
                         """, returnStdout: true).trim()
-
                     } else {
-                        echo "📝 No PDF uploaded, generating test cases from text..."
+                        echo "📝 Generating test cases from text..."
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate \
                             -H "Content-Type: application/json" \
@@ -92,7 +94,11 @@ pipeline {
                         """, returnStdout: true).trim()
                     }
 
-                    echo "🔹 Flask API Response: ${jsonResponse}"
+                    echo "🔹 API Response: ${jsonResponse}"
+
+                    if (!jsonResponse || jsonResponse.contains("404 Not Found") || jsonResponse.contains("500 Internal Server Error")) {
+                        error "❌ ERROR: API request failed. Check Flask logs."
+                    }
 
                     def parsedResponse = readJSON text: jsonResponse
                     def csvFilepath = parsedResponse.csv_filepath ?: ''
@@ -111,7 +117,13 @@ pipeline {
             steps {
                 script {
                     echo "📥 Downloading generated CSV file..."
-                    sh "curl -O http://127.0.0.1:5000/download/${env.GENERATED_CSV}"
+                    def downloadResponse = sh(script: "curl -s -o ${params.CSV_FILENAME}.csv http://127.0.0.1:5000/download/${env.GENERATED_CSV} || echo 'error'", returnStdout: true).trim()
+
+                    if (downloadResponse == "error") {
+                        error "❌ ERROR: Failed to download CSV file. Check Flask logs."
+                    }
+
+                    echo "✅ CSV file downloaded successfully!"
                 }
             }
         }
