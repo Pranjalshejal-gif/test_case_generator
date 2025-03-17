@@ -15,6 +15,8 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Jenkins workspace path (adjust if needed)
 WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
+if not os.path.exists(WORKSPACE):
+    os.makedirs(WORKSPACE)
 
 
 def extract_text_from_pdf(pdf_path):
@@ -23,7 +25,7 @@ def extract_text_from_pdf(pdf_path):
         doc = fitz.open(pdf_path)
         text = "\n".join(page.get_text("text") for page in doc).strip()
         return text if text else None
-    except Exception:
+    except Exception as e:
         return None
 
 
@@ -111,7 +113,7 @@ def generate():
 @app.route('/generate_pdf', methods=['POST'])
 def generate_from_pdf():
     """Generates test cases from a provided PDF file path."""
-    pdf_path = request.form.get("pdf_path")  # Updated to use a form parameter
+    pdf_path = request.form.get("pdf_path")  
 
     if not pdf_path or not os.path.exists(pdf_path):
         return jsonify({"error": "Invalid or missing PDF file path."}), 400

@@ -31,7 +31,7 @@ pipeline {
                 script {
                     if (params.PDF_FILE_PATH) {
                         if (!fileExists(params.PDF_FILE_PATH)) {
-                            error "ERROR: PDF file not found at: ${params.PDF_FILE_PATH}"
+                            error "❌ ERROR: PDF file not found at: ${params.PDF_FILE_PATH}"
                         }
                         echo "✅ PDF file found at: ${params.PDF_FILE_PATH}"
                         env.UPLOADED_PDF = params.PDF_FILE_PATH
@@ -47,7 +47,6 @@ pipeline {
                 script {
                     echo "🚀 Starting Flask application..."
                     sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-
                     sleep 5  
 
                     def flaskRunning = ""
@@ -68,7 +67,7 @@ pipeline {
             }
         }
 
-        stage('Process Uploaded PDF or Generate from Text') {
+        stage('Generate Test Cases') {
             steps {
                 script {
                     def jsonResponse = ""
@@ -84,7 +83,7 @@ pipeline {
                         """, returnStdout: true).trim()
 
                     } else {
-                        echo "📝 No PDF uploaded, generating test cases from text..."
+                        echo "📝 Generating test cases from text input..."
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate \
                             -H "Content-Type: application/json" \
@@ -111,7 +110,7 @@ pipeline {
             steps {
                 script {
                     echo "📥 Downloading generated CSV file..."
-                    sh "curl -O http://127.0.0.1:5000/download/${env.GENERATED_CSV}"
+                    sh "curl -o ${env.GENERATED_CSV} http://127.0.0.1:5000/download/${env.GENERATED_CSV}"
                 }
             }
         }
