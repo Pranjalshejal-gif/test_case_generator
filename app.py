@@ -9,26 +9,26 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Hardcoded Gemini API Key (Not recommended for production)
-GEMINI_API_KEY = "AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04"
+# Configure Gemini AI API
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Define Jenkins workspace path
+# Jenkins workspace path (adjust if needed)
 WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 
 
 def extract_text_from_pdf(pdf_path):
-    """Extracts text content from a PDF file."""
+    """Extracts text from a PDF file."""
     try:
         doc = fitz.open(pdf_path)
-        text = "".join(page.get_text("text") + "\n" for page in doc).strip()
+        text = "\n".join(page.get_text("text") for page in doc).strip()
         return text if text else None
     except Exception:
         return None
 
 
 def generate_test_cases(prompt, num_cases=5):
-    """Generate detailed test cases using Google Gemini AI, formatted as JSON."""
+    """Generate test cases using Google Gemini AI."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
         detailed_prompt = f"""
@@ -47,16 +47,16 @@ def generate_test_cases(prompt, num_cases=5):
 
 
 def parse_test_cases(ai_output):
-    """Parses AI output into a structured JSON list."""
+    """Parses AI output into JSON format."""
     try:
         cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
         return json.loads(cleaned_output) if cleaned_output.startswith("[") and cleaned_output.endswith("]") else {"error": "Invalid JSON format."}
-    except (json.JSONDecodeError, ValueError) as e:
+    except json.JSONDecodeError as e:
         return {"error": f"Error parsing AI output: {str(e)}"}
 
 
 def save_as_csv(test_cases, user_filename):
-    """Saves parsed test cases to a CSV file inside the Jenkins workspace."""
+    """Saves parsed test cases to a CSV file."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
@@ -87,6 +87,7 @@ def home():
 
 @app.route('/generate', methods=['POST'])
 def generate():
+    """Generates test cases from text input."""
     data = request.json
     topic = data.get("topic")
     num_cases = int(data.get("num_cases", 5))
@@ -109,18 +110,15 @@ def generate():
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_from_pdf():
-    if 'pdf_file' not in request.files:
-        return jsonify({"error": "No PDF file provided."}), 400
+    """Generates test cases from a provided PDF file path."""
+    pdf_path = request.form.get("pdf_path")  # Updated to use a form parameter
 
-    pdf_file = request.files['pdf_file']
-    pdf_filename = pdf_file.filename
-    filename_without_ext = os.path.splitext(pdf_filename)[0]
-    pdf_path = os.path.join(WORKSPACE, pdf_filename)
-    pdf_file.save(pdf_path)
+    if not pdf_path or not os.path.exists(pdf_path):
+        return jsonify({"error": "Invalid or missing PDF file path."}), 400
 
     extracted_text = extract_text_from_pdf(pdf_path)
     if not extracted_text:
-        return jsonify({"error": "Could not extract text from the uploaded PDF."}), 500
+        return jsonify({"error": "Could not extract text from the provided PDF file."}), 500
 
     num_cases = int(request.form.get("num_cases", 5))
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
@@ -133,7 +131,9 @@ def generate_from_pdf():
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
 
-    csv_filepath = save_as_csv(parsed_test_cases, filename_without_ext)
+    user_filename = os.path.splitext(os.path.basename(pdf_path))[0]
+    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
+
     return jsonify({"message": "Test cases generated successfully from PDF!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
 
@@ -144,6 +144,7 @@ def health_check():
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    """Downloads the generated CSV file."""
     file_path = os.path.join(WORKSPACE, filename)
     try:
         return send_file(file_path, as_attachment=True)

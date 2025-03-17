@@ -9,7 +9,7 @@ pipeline {
         string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic (optional if using PDF)')
         string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
-        file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation (optional)') 
+        string(name: 'PDF_FILE_PATH', defaultValue: '', description: 'Enter the absolute path of the PDF file (optional)')
     }
 
     stages {
@@ -26,21 +26,18 @@ pipeline {
             }
         }
 
-        stage('Identify Where Jenkins Stores the Uploaded File') {
+        stage('Check PDF File') {
             steps {
                 script {
-                    echo "Searching for the uploaded PDF file in /tmp..."
-
-                    def pdfFilePath = sh(script: """
-                       find /tmp -maxdepth 1 -type f -name '*.pdf' ! -path '/tmp/systemd-*' ! -path '/tmp/snap-*' 2>/dev/null | head -n 1
-                        """, returnStdout: true).trim()
-
-                    if (!pdfFilePath) {
-                        error "Uploaded PDF file not found in /tmp!"
+                    if (params.PDF_FILE_PATH) {
+                        if (!fileExists(params.PDF_FILE_PATH)) {
+                            error "PDF file not found at: ${params.PDF_FILE_PATH}"
+                        }
+                        echo "PDF file found at: ${params.PDF_FILE_PATH}"
+                        env.UPLOADED_PDF = params.PDF_FILE_PATH
+                    } else {
+                        echo "No PDF file provided, proceeding with text-based test case generation."
                     }
-
-                    echo "PDF file found at: ${pdfFilePath}"
-                    env.UPLOADED_PDF = pdfFilePath  // Store the path in an environment variable for later use
                 }
             }
         }
@@ -68,7 +65,7 @@ pipeline {
                     def jsonResponse = ""
 
                     if (env.UPLOADED_PDF) {
-                        echo "Processing PDF file from /tmp: ${env.UPLOADED_PDF}"
+                        echo "Processing PDF file: ${env.UPLOADED_PDF}"
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
                             -F "pdf_file=@${env.UPLOADED_PDF}" \
