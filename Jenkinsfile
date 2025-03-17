@@ -7,7 +7,7 @@ pipeline {
 
     parameters {
         string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic (optional if using PDF)')
-        string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter the number of test cases')
+        string(name: 'NUM_CASES', defaultValue: '', description: 'Enter the number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter the CSV filename')
         file(name: 'PDF_FILE', description: 'Upload a PDF file for test case generation (optional)') 
     }
