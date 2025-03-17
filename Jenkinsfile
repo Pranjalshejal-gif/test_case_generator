@@ -32,8 +32,8 @@ pipeline {
                     echo "Searching for the uploaded PDF file in /tmp..."
 
                     def pdfFilePath = sh(script: """
-                        find /tmp -maxdepth 1 -type f -name '*.pdf' ! -path '/tmp/systemd-*' ! -path '/tmp/snap-*' 2>/dev/null | head -n 1
-                    """, returnStdout: true).trim()
+                       find /tmp -maxdepth 1 -type f -name '*.pdf' ! -path '/tmp/systemd-*' ! -path '/tmp/snap-*' 2>/dev/null | head -n 1
+                        """, returnStdout: true).trim()
 
                     if (!pdfFilePath) {
                         error "Uploaded PDF file not found in /tmp!"
