@@ -113,15 +113,17 @@ def generate_from_pdf():
         return jsonify({"error": "No PDF file provided."}), 400
 
     pdf_file = request.files['pdf_file']
-    user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
-    num_cases = int(request.form.get("num_cases", 5))
-    user_filename = request.form.get("filename", "test_cases")
-    pdf_path = os.path.join(WORKSPACE, pdf_file.filename)
+    pdf_filename = pdf_file.filename
+    filename_without_ext = os.path.splitext(pdf_filename)[0]
+    pdf_path = os.path.join(WORKSPACE, pdf_filename)
     pdf_file.save(pdf_path)
 
     extracted_text = extract_text_from_pdf(pdf_path)
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the uploaded PDF."}), 500
+
+    num_cases = int(request.form.get("num_cases", 5))
+    user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
 
     ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
     if isinstance(ai_output, dict) and "error" in ai_output:
@@ -131,7 +133,7 @@ def generate_from_pdf():
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
 
-    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
+    csv_filepath = save_as_csv(parsed_test_cases, filename_without_ext)
     return jsonify({"message": "Test cases generated successfully from PDF!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
 
