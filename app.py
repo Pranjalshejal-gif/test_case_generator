@@ -10,7 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configure Gemini AI API
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"  # Replace with your actual key
+GEMINI_API_KEY = "AIzaSyDCQIZ6dZXVueuY4aHBFRA4n3fd0MER8mA"  # Replace with your actual key
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Jenkins workspace path (adjust if needed)
