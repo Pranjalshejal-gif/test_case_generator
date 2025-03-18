@@ -18,7 +18,6 @@ WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 if not os.path.exists(WORKSPACE):
     os.makedirs(WORKSPACE)
 
-
 def extract_text_from_pdf(pdf_path):
     """Extracts text from a PDF file."""
     try:
@@ -27,7 +26,6 @@ def extract_text_from_pdf(pdf_path):
         return text if text else None
     except Exception as e:
         return None
-
 
 def generate_test_cases(prompt, num_cases=5):
     """Generate test cases using Google Gemini AI."""
@@ -38,10 +36,11 @@ def generate_test_cases(prompt, num_cases=5):
         Each test case should be a JSON object with the following fields:
         - "Test Case ID": A unique identifier.
         - "Test Case Name": A descriptive name.
-        - "Request": The API request payload.
-        - "Response": The expected API response payload.
-        - "Request Headers": The headers used in the request.
-        - "Response Headers": The headers received in the response.
+        - "Test Data": A dictionary containing:
+            - "Request": The API request payload in JSON/XML format.
+            - "Response": The expected API response payload in JSON/XML format.
+            - "Request Headers": The headers used in the request.
+            - "Response Headers": The headers received in the response.
         - "Expected Message": The expected message outcome.
         - "Error Code": Any potential error code.
         - "Error Message": The error message details.
@@ -52,7 +51,6 @@ def generate_test_cases(prompt, num_cases=5):
     except Exception as e:
         return {"error": f"Error generating test cases: {str(e)}"}
 
-
 def parse_test_cases(ai_output):
     """Parses AI output into JSON format."""
     try:
@@ -61,13 +59,12 @@ def parse_test_cases(ai_output):
     except json.JSONDecodeError as e:
         return {"error": f"Error parsing AI output: {str(e)}"}
 
-
 def save_as_csv(test_cases, user_filename):
     """Saves parsed test cases to a CSV file."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
-    csv_headers = ["Test Case ID", "Test Case Name", "Request", "Response", "Request Headers", "Response Headers", "Expected Message", "Error Code", "Error Message"]
+    csv_headers = ["Test Case ID", "Test Case Name", "Test Data", "Expected Message", "Error Code", "Error Message"]
 
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
@@ -77,10 +74,7 @@ def save_as_csv(test_cases, user_filename):
                 writer.writerow({
                     "Test Case ID": case.get("Test Case ID", ""),
                     "Test Case Name": case.get("Test Case Name", ""),
-                    "Request": json.dumps(case.get("Request", {})),
-                    "Response": json.dumps(case.get("Response", {})),
-                    "Request Headers": json.dumps(case.get("Request Headers", {})),
-                    "Response Headers": json.dumps(case.get("Response Headers", {})),
+                    "Test Data": json.dumps(case.get("Test Data", {})),
                     "Expected Message": case.get("Expected Message", ""),
                     "Error Code": case.get("Error Code", ""),
                     "Error Message": case.get("Error Message", "")
@@ -89,11 +83,9 @@ def save_as_csv(test_cases, user_filename):
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
 
-
 @app.route('/')
 def home():
     return render_template('index.html')
-
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -116,7 +108,6 @@ def generate():
 
     csv_filepath = save_as_csv(parsed_test_cases, user_filename)
     return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
-
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_from_pdf():
@@ -146,12 +137,6 @@ def generate_from_pdf():
 
     return jsonify({"message": "Test cases generated successfully from PDF!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    return "OK", 200
-
-
 @app.route('/download/<filename>')
 def download_file(filename):
     """Downloads the generated CSV file."""
@@ -160,7 +145,6 @@ def download_file(filename):
         return send_file(file_path, as_attachment=True)
     except FileNotFoundError:
         return jsonify({"error": "File not found."}), 404
-
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
