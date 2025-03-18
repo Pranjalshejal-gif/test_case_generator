@@ -10,7 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configure Gemini AI API
-GEMINI_API_KEY = "AIzaSyCzqoM83e7dcghJ8Ky-nfydKwl4KPANF04"
+GEMINI_API_KEY = "AIzaSyDCQIZ6dZXVueuY4aHBFRA4n3fd0MER8mA"
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Jenkins workspace path (adjust if needed)
@@ -124,6 +124,50 @@ def generate():
 
     csv_filepath = save_as_csv(parsed_test_cases, user_filename)
     return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
+
+
+@app.route('/generate_pdf', methods=['POST'])
+def generate_from_pdf():
+    """Generates test cases from a provided PDF file path."""
+    pdf_path = request.form.get("pdf_path")
+
+    if not pdf_path or not os.path.exists(pdf_path):
+        return jsonify({"error": "Invalid or missing PDF file path."}), 400
+
+    extracted_text = extract_text_from_pdf(pdf_path)
+    if not extracted_text:
+        return jsonify({"error": "Could not extract text from the provided PDF file."}), 500
+
+    num_cases = int(request.form.get("num_cases", 5))
+    user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
+
+    ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
+    if isinstance(ai_output, dict) and "error" in ai_output:
+        return jsonify(ai_output), 500
+
+    parsed_test_cases = parse_test_cases(ai_output)
+    if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
+        return jsonify(parsed_test_cases), 500
+
+    user_filename = os.path.splitext(os.path.basename(pdf_path))[0]
+    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
+
+    return jsonify({"message": "Test cases generated successfully from PDF!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
+
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return "OK", 200
+
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """Downloads the generated CSV file."""
+    file_path = os.path.join(WORKSPACE, filename)
+    try:
+        return send_file(file_path, as_attachment=True)
+    except FileNotFoundError:
+        return jsonify({"error": "File not found."}), 404
 
 
 if __name__ == "__main__":
