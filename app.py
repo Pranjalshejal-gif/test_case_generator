@@ -10,7 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configure Gemini AI API
-GEMINI_API_KEY = "AIzaSyDCQIZ6dZXVueuY4aHBFRA4n3fd0MER8mA"
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"  # Replace with your actual key
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Jenkins workspace path (adjust if needed)
@@ -32,10 +32,10 @@ def extract_text_from_pdf(pdf_path):
 def generate_test_cases(prompt, num_cases=5):
     """Generate test cases using Google Gemini AI."""
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-2.0-pro")
         detailed_prompt = f"""
         Generate {num_cases} detailed test cases for: {prompt}.
-        Each test case should include:
+        Each test case should be a JSON object with the following fields:
         - "Test Case ID": A unique identifier.
         - "Test Case Name": A descriptive name.
         - "Request": The API request payload.
@@ -45,7 +45,7 @@ def generate_test_cases(prompt, num_cases=5):
         - "Expected Message": The expected message outcome.
         - "Error Code": Any potential error code.
         - "Error Message": The error message details.
-        Return ONLY the JSON array, without any extra text.
+        Return ONLY a JSON array, with no extra text.
         """
         response = model.generate_content(detailed_prompt)
         return response.text.strip() if response and response.text else {"error": "No response from AI."}
@@ -67,31 +67,23 @@ def save_as_csv(test_cases, user_filename):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
-    csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
+    csv_headers = ["Test Case ID", "Test Case Name", "Request", "Response", "Request Headers", "Response Headers", "Expected Message", "Error Code", "Error Message"]
 
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=csv_headers)
             writer.writeheader()
-            for index, case in enumerate(test_cases, start=1):
-                test_data = {
-                    "Request": case.get("Request", ""),
-                    "Response": case.get("Response", ""),
-                    "Request Headers": case.get("Request Headers", ""),
-                    "Response Headers": case.get("Response Headers", "")
-                }
-                expected_result = {
+            for case in test_cases:
+                writer.writerow({
+                    "Test Case ID": case.get("Test Case ID", ""),
+                    "Test Case Name": case.get("Test Case Name", ""),
+                    "Request": json.dumps(case.get("Request", {})),
+                    "Response": json.dumps(case.get("Response", {})),
+                    "Request Headers": json.dumps(case.get("Request Headers", {})),
+                    "Response Headers": json.dumps(case.get("Response Headers", {})),
                     "Expected Message": case.get("Expected Message", ""),
                     "Error Code": case.get("Error Code", ""),
                     "Error Message": case.get("Error Message", "")
-                }
-                writer.writerow({
-                    "Test Case No": index,
-                    "Test Step": case.get("Test Case ID", ""),
-                    "Test Type": "Manual",
-                    "Test Summary": case.get("Test Case Name", ""),
-                    "Test Data": json.dumps(test_data),
-                    "Expected Result": json.dumps(expected_result)
                 })
         return filepath
     except Exception as e:
