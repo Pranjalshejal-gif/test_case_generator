@@ -32,7 +32,7 @@ def extract_text_from_pdf(pdf_path):
 def generate_test_cases(prompt, num_cases=5):
     """Generate test cases using Google Gemini AI."""
     try:
-        model = genai.GenerativeModel("gemini-2.0-pro")
+        model = genai.GenerativeModel("gemini-2.0-flash")
         detailed_prompt = f"""
         Generate {num_cases} detailed test cases for: {prompt}.
         Each test case should be a JSON object with the following fields:
