@@ -57,11 +57,37 @@ def parse_test_cases(ai_output):
         return {"error": f"Error parsing AI output: {str(e)}"}
 
 
+# def save_as_csv(test_cases, user_filename):
+#     """Saves parsed test cases to a CSV file."""
+#     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#     filename = f"{user_filename}_{timestamp}.csv"
+#     filepath = os.path.join(WORKSPACE, filename)
+#     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
+
+#     try:
+#         with open(filepath, "w", newline="", encoding="utf-8") as file:
+#             writer = csv.DictWriter(file, fieldnames=csv_headers)
+#             writer.writeheader()
+#             for index, case in enumerate(test_cases, start=1):
+#                 writer.writerow({
+#                     "Test Case No": index,
+#                     "Test Step": case.get("Test Case ID", ""),
+#                     "Test Type": "Manual",
+#                     "Test Summary": case.get("Test Case Name", ""),
+#                     "Test Data": json.dumps(case.get("Test Data", {})),
+#                     "Expected Result": json.dumps(case.get("Expected Result", {}))
+#                 })
+#         return filepath
+#     except Exception as e:
+#         return {"error": f"Error saving CSV: {str(e)}"}
+
+
 def save_as_csv(test_cases, user_filename):
-    """Saves parsed test cases to a CSV file."""
+    """Saves parsed test cases to a CSV file, ensuring Test Data captures request and response details."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
+    
     csv_headers = ["Test Case No", "Test Step", "Test Type", "Test Summary", "Test Data", "Expected Result"]
 
     try:
@@ -69,17 +95,38 @@ def save_as_csv(test_cases, user_filename):
             writer = csv.DictWriter(file, fieldnames=csv_headers)
             writer.writeheader()
             for index, case in enumerate(test_cases, start=1):
+                # Extract data properly
+                request_data = case.get("Test Data", {}).get("Request", "")
+                response_data = case.get("Test Data", {}).get("Response", "")
+                request_headers = case.get("Test Data", {}).get("Request Headers", {})
+                response_headers = case.get("Test Data", {}).get("Response Headers", {})
+
+                # Structure Test Data to include request and response details
+                test_data = {
+                    "Request": request_data,
+                    "Response": response_data,
+                    "Request Headers": request_headers,
+                    "Response Headers": response_headers
+                }
+
+                # Extract expected message and error code only
+                expected_result = {
+                    "Expected Message": case.get("Expected Result", {}).get("message", ""),
+                    "Error Code": case.get("Expected Result", {}).get("error_code", "")
+                }
+
                 writer.writerow({
                     "Test Case No": index,
                     "Test Step": case.get("Test Case ID", ""),
                     "Test Type": "Manual",
                     "Test Summary": case.get("Test Case Name", ""),
-                    "Test Data": json.dumps(case.get("Test Data", {})),
-                    "Expected Result": json.dumps(case.get("Expected Result", {}))
+                    "Test Data": json.dumps(test_data, ensure_ascii=False),
+                    "Expected Result": json.dumps(expected_result, ensure_ascii=False)
                 })
         return filepath
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
+
 
 
 @app.route('/')
