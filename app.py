@@ -10,7 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configure Gemini AI API
-GEMINI_API_KEY = "AIzaSyDCQIZ6dZXVueuY4aHBFRA4n3fd0MER8mA"  # Replace with your actual key
+GEMINI_API_KEY = "AIzaSyBF6QUMCGEAKcxjAWhgC_fJQXQCUyNEZyc"  # Replace with your actual key
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Jenkins workspace path (adjust if needed)
@@ -67,7 +67,7 @@ def save_as_csv(test_cases, user_filename):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
-    csv_headers = ["Test Case ID", "Test Case Name", "Request", "Response", "Request Headers", "Response Headers", "Expected Message", "Error Code", "Error Message"]
+    csv_headers = ["Test Case ID", "Test Summary", "Test Type", "Test Data", "Expected Result"]
 
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
@@ -76,14 +76,19 @@ def save_as_csv(test_cases, user_filename):
             for case in test_cases:
                 writer.writerow({
                     "Test Case ID": case.get("Test Case ID", ""),
-                    "Test Case Name": case.get("Test Case Name", ""),
-                    "Request": json.dumps(case.get("Request", {})),
-                    "Response": json.dumps(case.get("Response", {})),
-                    "Request Headers": json.dumps(case.get("Request Headers", {})),
-                    "Response Headers": json.dumps(case.get("Response Headers", {})),
-                    "Expected Message": case.get("Expected Message", ""),
-                    "Error Code": case.get("Error Code", ""),
-                    "Error Message": case.get("Error Message", "")
+                    "Test Summary": case.get("Test Case Name", ""),
+                    "Test Type": "Manual",
+                    "Test Data": json.dumps({
+                        "Request": case.get("Request", {}),
+                        "Request Headers": case.get("Request Headers", {}),
+                        "Response": case.get("Response", {}),
+                        "Response Headers": case.get("Response Headers", {})
+                    }),
+                    "Expected Result": json.dumps({
+                        "Expected Message": case.get("Expected Message", ""),
+                        "Error Code": case.get("Error Code", ""),
+                        "Error Message": case.get("Error Message", "")
+                    })
                 })
         return filepath
     except Exception as e:
@@ -106,16 +111,7 @@ def generate():
     if not topic:
         return jsonify({"error": "No topic provided."}), 400
 
-    ai_output = generate_test_cases(topic, num_cases)
-    if isinstance(ai_output, dict) and "error" in ai_output:
-        return jsonify(ai_output), 500
-
-    parsed_test_cases = parse_test_cases(ai_output)
-    if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
-        return jsonify(parsed_test_cases), 500
-
-    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
-    return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
+    return generate_and_save_test_cases(topic, num_cases, user_filename)
 
 
 @app.route('/generate_pdf', methods=['POST'])
@@ -133,7 +129,11 @@ def generate_from_pdf():
     num_cases = int(request.form.get("num_cases", 5))
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
 
-    ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
+    return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(pdf_path))[0])
+
+
+def generate_and_save_test_cases(prompt, num_cases, filename):
+    ai_output = generate_test_cases(prompt, num_cases)
     if isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify(ai_output), 500
 
@@ -141,10 +141,8 @@ def generate_from_pdf():
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
 
-    user_filename = os.path.splitext(os.path.basename(pdf_path))[0]
-    csv_filepath = save_as_csv(parsed_test_cases, user_filename)
-
-    return jsonify({"message": "Test cases generated successfully from PDF!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
+    csv_filepath = save_as_csv(parsed_test_cases, filename)
+    return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
 
 @app.route('/health', methods=['GET'])
