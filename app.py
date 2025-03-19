@@ -5,15 +5,17 @@ import re
 import csv
 import os
 import fitz  # PyMuPDF for PDF text extraction
+import pytesseract  # OCR for image text extraction
+from PIL import Image
 from datetime import datetime
 
 app = Flask(__name__)
 
 # Configure Gemini AI API
-GEMINI_API_KEY = "AIzaSyBF6QUMCGEAKcxjAWhgC_fJQXQCUyNEZyc"  # Replace with your actual key
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"  # Replace with actual key
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Jenkins workspace path (adjust if needed)
+# Jenkins workspace path
 WORKSPACE = os.getenv("WORKSPACE", "/var/lib/jenkins/workspace/Test_Suit")
 if not os.path.exists(WORKSPACE):
     os.makedirs(WORKSPACE)
@@ -25,7 +27,17 @@ def extract_text_from_pdf(pdf_path):
         doc = fitz.open(pdf_path)
         text = "\n".join(page.get_text("text") for page in doc).strip()
         return text if text else None
-    except Exception as e:
+    except Exception:
+        return None
+
+
+def extract_text_from_image(image_path):
+    """Extracts text from an image using OCR (for PlantUML)."""
+    try:
+        image = Image.open(image_path)
+        text = pytesseract.image_to_string(image)
+        return text.strip() if text else None
+    except Exception:
         return None
 
 
@@ -35,17 +47,17 @@ def generate_test_cases(prompt, num_cases=5):
         model = genai.GenerativeModel("gemini-2.0-flash")
         detailed_prompt = f"""
         Generate {num_cases} detailed test cases for: {prompt}.
-        Each test case should be a JSON object with the following fields:
-        - "Test Case ID": A unique identifier.
-        - "Test Case Name": A descriptive name.
-        - "Request": The API request payload.
-        - "Response": The expected API response payload.
-        - "Request Headers": The headers used in the request.
-        - "Response Headers": The headers received in the response.
-        - "Expected Message": The expected message outcome.
-        - "Error Code": Any potential error code.
-        - "Error Message": The error message details.
-        Return ONLY a JSON array, with no extra text.
+        Each test case should be a JSON object with these fields:
+        - "Test Case ID"
+        - "Test Case Name"
+        - "Request"
+        - "Response"
+        - "Request Headers"
+        - "Response Headers"
+        - "Expected Message"
+        - "Error Code"
+        - "Error Message"
+        Return ONLY a JSON array.
         """
         response = model.generate_content(detailed_prompt)
         return response.text.strip() if response and response.text else {"error": "No response from AI."}
@@ -130,6 +142,24 @@ def generate_from_pdf():
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
 
     return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(pdf_path))[0])
+
+
+@app.route('/generate_image', methods=['POST'])
+def generate_from_image():
+    """Generates test cases from a provided PlantUML image."""
+    image_path = request.form.get("image_path")
+
+    if not image_path or not os.path.exists(image_path):
+        return jsonify({"error": "Invalid or missing image file path."}), 400
+
+    extracted_text = extract_text_from_image(image_path)
+    if not extracted_text:
+        return jsonify({"error": "Could not extract text from the provided image."}), 500
+
+    num_cases = int(request.form.get("num_cases", 5))
+    user_prompt = request.form.get("prompt", "Generate test cases based on this UML diagram.")
+
+    return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(image_path))[0])
 
 
 def generate_and_save_test_cases(prompt, num_cases, filename):
