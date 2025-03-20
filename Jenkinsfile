@@ -64,59 +64,57 @@ pipeline {
             }
         }
 
-        stage('Generate Test Cases') {
-            steps {
-                script {
-                    def jsonResponse = ""
+       stage('Generate Test Cases') {
+    steps {
+        script {
+            def jsonResponse = ""
 
-                    if (params.PDF_FILE_PATH) {
-                        echo "📄 Processing PDF file: ${params.PDF_FILE_PATH}"
-                        jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate_pdf \
-                            -F "pdf_path=${params.PDF_FILE_PATH}" \
-                            -F "prompt=${params.TEST_TOPIC}" \
-                            -F "num_cases=${params.NUM_CASES}" \
-                            -F "filename=${params.CSV_FILENAME}"
-                        """, returnStdout: true).trim()
-                    } else if (params.PLANTUML_IMAGE_PATH) {
-                        echo "🖼️ Processing PlantUML image: ${params.PLANTUML_IMAGE_PATH}"
-
-                        jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate_image \
-                            -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
-                            -F "prompt=${params.TEST_TOPIC}" \
-                            -F "num_cases=${params.NUM_CASES}" \
-                            -F "filename=${params.CSV_FILENAME}"
-                        """, returnStdout: true).trim()
-
-                       
-                    } else {
-                        echo "📝 Generating test cases from text..."
-                        jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate \
-                            -H "Content-Type: application/json" \
-                            -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${params.NUM_CASES}, "filename": "${params.CSV_FILENAME}"}'
-                        """, returnStdout: true).trim()
-                    }
-
-                    echo "🔹 API Response: ${jsonResponse}"
-
-                    if (!jsonResponse || jsonResponse.contains("404 Not Found") || jsonResponse.contains("500 Internal Server Error")) {
-                        error "❌ ERROR: API request failed. Check Flask logs."
-                    }
-
-                    def parsedResponse = readJSON text: jsonResponse
-                    def csvFilepath = parsedResponse.csv_filepath ?: ''
-
-                    if (!csvFilepath || csvFilepath == "null") {
-                        error "❌ ERROR: Failed to extract CSV filepath from API response."
-                    }
-
-                    echo "✅ CSV file generated: ${csvFilepath}"
-                    env.GENERATED_CSV = csvFilepath
-                }
+            if (params.PDF_FILE_PATH) {
+                echo "📄 Processing PDF file: ${params.PDF_FILE_PATH}"
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate_pdf \
+                    -F "pdf_path=${params.PDF_FILE_PATH}" \
+                    -F "prompt=${params.TEST_TOPIC}" \
+                    -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
+                    -F "filename=${params.CSV_FILENAME}"
+                """, returnStdout: true).trim()
+            } else if (params.PLANTUML_IMAGE_PATH) {
+                echo "🖼️ Processing PlantUML image: ${params.PLANTUML_IMAGE_PATH}"
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate_image \
+                    -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
+                    -F "prompt=${params.TEST_TOPIC}" \
+                    -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
+                    -F "filename=${params.CSV_FILENAME}"
+                """, returnStdout: true).trim()
+            } else {
+                echo "📝 Generating test cases from text..."
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate \
+                    -H "Content-Type: application/json" \
+                    -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${Math.min(params.NUM_CASES.toInteger(), 100)}, "filename": "${params.CSV_FILENAME}"}'
+                """, returnStdout: true).trim()
             }
+
+            echo "🔹 API Response: ${jsonResponse}"
+
+            if (!jsonResponse || jsonResponse.contains("404 Not Found") || jsonResponse.contains("500 Internal Server Error")) {
+                error "❌ ERROR: API request failed. Check Flask logs."
+            }
+
+            def parsedResponse = readJSON text: jsonResponse
+            def csvFilepath = parsedResponse.csv_filepath ?: ''
+
+            if (!csvFilepath || csvFilepath == "null") {
+                error "❌ ERROR: Failed to extract CSV filepath from API response."
+            }
+
+            echo "✅ CSV file generated: ${csvFilepath}"
+            env.GENERATED_CSV = csvFilepath
         }
+    }
+}
+
 
         stage('Download Test Cases CSV') {
             steps {
