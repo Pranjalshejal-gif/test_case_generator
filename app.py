@@ -81,7 +81,7 @@ def save_as_csv(test_cases, user_filename):
     filepath = os.path.join(WORKSPACE, filename)
 
     # ✅ Added "Test Step" column in headers
-    csv_headers = ["Test Case ID", "Test Summary", "Test Type", "Test Data", "Expected Result", "Test Step"]
+    csv_headers = ["Test Case ID", "Test Summary","Test Step", "Test Type", "Test Data", "Expected Result"]
 
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
