@@ -60,7 +60,7 @@ pipeline {
                 script {
                     echo "🚀 Starting Flask application..."
                     sh '''
-                        chmod -R 777 .
+                        
                         nohup python3 app.py > flask.log 2>&1 &
                         sleep 5
                     '''
