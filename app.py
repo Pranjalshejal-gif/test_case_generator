@@ -117,7 +117,8 @@ def generate():
     """Generates test cases from text input."""
     data = request.json
     topic = data.get("topic")
-    num_cases = int(data.get("num_cases", 5))
+    num_cases = min(int(data.get("num_cases", 5)), 100)  # Limit to 100
+
     user_filename = data.get("filename", "test_cases")
 
     if not topic:
@@ -138,7 +139,9 @@ def generate_from_pdf():
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the provided PDF file."}), 500
 
-    num_cases = int(request.form.get("num_cases", 5))
+    # num_cases = int(request.form.get("num_cases", 5))
+    num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100
+
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
 
     return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(pdf_path))[0])
@@ -156,7 +159,9 @@ def generate_from_image():
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the provided image."}), 500
 
-    num_cases = int(request.form.get("num_cases", 5))
+    # num_cases = int(request.form.get("num_cases", 5))
+    num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100
+
     user_prompt = request.form.get("prompt", "Generate test cases based on this UML diagram.")
 
     return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(image_path))[0])
