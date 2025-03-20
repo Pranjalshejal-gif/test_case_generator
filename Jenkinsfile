@@ -24,7 +24,8 @@ pipeline {
             steps {
                 sh '''
                     pip install --user -r requirements.txt
-                    pip install --user pymupdf flask requests pillow
+                    pip install --user pymupdf flask requests pillow pytesseract
+                    
                 '''
             }
         }
