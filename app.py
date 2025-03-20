@@ -79,15 +79,20 @@ def save_as_csv(test_cases, user_filename):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
-    csv_headers = ["Test Case ID", "Test Summary", "Test Type", "Test Data", "Expected Result"]
+
+    # ✅ Added "Test Step" column in headers
+    csv_headers = ["Test Case ID", "Test Summary", "Test Type", "Test Data", "Expected Result", "Test Step"]
 
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=csv_headers)
             writer.writeheader()
+
             for case in test_cases:
+                test_case_id = case.get("Test Case ID", "")  # ✅ Defined before use
+                
                 writer.writerow({
-                    "Test Case ID": case.get("Test Case ID", ""),
+                    "Test Case ID": test_case_id,
                     "Test Summary": case.get("Test Case Name", ""),
                     "Test Type": "Manual",
                     "Test Data": json.dumps({
@@ -100,12 +105,13 @@ def save_as_csv(test_cases, user_filename):
                         "Expected Message": case.get("Expected Message", ""),
                         "Error Code": case.get("Error Code", ""),
                         "Error Message": case.get("Error Message", "")
-                    })
+                    }),
+                    "Test Step": f"Step for {test_case_id}"  # ✅ Now properly using test_case_id
                 })
+                
         return filepath
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
-
 
 @app.route('/')
 def home():
