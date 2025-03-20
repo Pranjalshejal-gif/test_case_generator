@@ -80,13 +80,16 @@ pipeline {
                         """, returnStdout: true).trim()
                     } else if (params.PLANTUML_IMAGE_PATH) {
                         echo "🖼️ Processing PlantUML image: ${params.PLANTUML_IMAGE_PATH}"
+
                         jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate_plantuml \
-                            -F "plantuml_path=${params.PLANTUML_IMAGE_PATH}" \
+                            curl -s -X POST http://127.0.0.1:5000/generate_image \
+                            -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
                             -F "prompt=${params.TEST_TOPIC}" \
                             -F "num_cases=${params.NUM_CASES}" \
                             -F "filename=${params.CSV_FILENAME}"
                         """, returnStdout: true).trim()
+
+                       
                     } else {
                         echo "📝 Generating test cases from text..."
                         jsonResponse = sh(script: """
