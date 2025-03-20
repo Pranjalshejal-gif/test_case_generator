@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GIT_REPO = 'https://github.com/Pranjalshejal-gif/test_case_generator.git'
-        VENV_DIR = "${WORKSPACE}/venv"
+        PYTHON_BIN = '/usr/bin/python3'  // Update this path if necessary
     }
 
     parameters {
@@ -21,25 +21,12 @@ pipeline {
             }
         }
 
-        stage('Setup Python Virtual Environment') {
-            steps {
-                sh '''
-                    echo "📌 Setting up Python virtual environment..."
-                    python3 -m venv ${VENV_DIR}
-                    source ${VENV_DIR}/bin/activate
-                    echo "✅ Virtual environment created at ${VENV_DIR}"
-                '''
-            }
-        }
-
         stage('Install Python Dependencies') {
             steps {
                 sh '''
-                    echo "📌 Installing Python dependencies inside virtual environment..."
-                    source ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
-                    pip install --no-cache-dir -r requirements.txt pytesseract pillow flask requests plantuml
-                    echo "✅ Dependencies installed successfully"
+                    echo "📌 Installing Python dependencies..."
+                    pip3 install --no-cache-dir -r requirements.txt
+                    echo "✅ Dependencies installed"
                 '''
             }
         }
@@ -49,10 +36,9 @@ pipeline {
                 script {
                     echo "🚀 Starting Flask application..."
                     sh '''
-                        source ${VENV_DIR}/bin/activate
                         nohup python3 app.py > flask_output.log 2>&1 &
                     '''
-                    sleep 5  
+                    sleep 5
 
                     def max_retries = 5
                     def flaskRunning = "down"
