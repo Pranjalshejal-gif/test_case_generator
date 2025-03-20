@@ -8,7 +8,6 @@ pipeline {
 
     parameters {
         string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic')
-        string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter CSV filename')
         string(name: 'PDF_FILE_PATH', defaultValue: '', description: 'Path to PDF file')
         string(name: 'PLANTUML_IMAGE_PATH', defaultValue: '', description: 'Path to PlantUML image')
@@ -72,7 +71,6 @@ pipeline {
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
                             -F "pdf_path=${params.PDF_FILE_PATH}" \
                             -F "prompt=${params.TEST_TOPIC}" \
-                            -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
                             -F "filename=${params.CSV_FILENAME}"
                         """, returnStdout: true).trim()
                     } else if (params.PLANTUML_IMAGE_PATH) {
@@ -81,7 +79,6 @@ pipeline {
                             curl -s -X POST http://127.0.0.1:5000/generate_image \
                             -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
                             -F "prompt=${params.TEST_TOPIC}" \
-                            -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
                             -F "filename=${params.CSV_FILENAME}"
                         """, returnStdout: true).trim()
                     } else {
@@ -89,7 +86,7 @@ pipeline {
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate \
                             -H "Content-Type: application/json" \
-                            -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${Math.min(params.NUM_CASES.toInteger(), 100)}, "filename": "${params.CSV_FILENAME}"}'
+                            -d '{"topic": "${params.TEST_TOPIC}", "filename": "${params.CSV_FILENAME}"}'
                         """, returnStdout: true).trim()
                     }
 
