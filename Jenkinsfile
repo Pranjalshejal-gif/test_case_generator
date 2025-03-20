@@ -65,7 +65,14 @@ pipeline {
                 script {
                     def jsonResponse = ""
 
-                    if (params.PDF_FILE_PATH) {
+                    if (params.TEST_TOPIC && params.PDF_FILE_PATH && params.PLANTUML_IMAGE_PATH) {
+                        echo " Processing all inputs: Text, PDF, and Image..."
+                        jsonResponse = sh(script: """
+                            curl -s -X POST http://127.0.0.1:5000/generate_combined \
+                            -H "Content-Type: application/json" \
+                            -d '{"topic": "${params.TEST_TOPIC}", "pdf_path": "${params.PDF_FILE_PATH}", "image_path": "${params.PLANTUML_IMAGE_PATH}", "filename": "${params.CSV_FILENAME}"}'
+                        """, returnStdout: true).trim()
+                    } else if (params.PDF_FILE_PATH) {
                         echo " Processing PDF file: ${params.PDF_FILE_PATH}"
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
