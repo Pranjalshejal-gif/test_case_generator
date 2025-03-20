@@ -55,32 +55,33 @@ pipeline {
             }
         }
 
-        stage('Start Flask Server') {
-            steps {
-                script {
-                    echo "🚀 Starting Flask application..."
-                    sh 'nohup python3 app.py > flask_output.log 2>&1 &'
-                    sleep 5  
-
-                    def max_retries = 5
-                    def flaskRunning = "down"
-
-                    for (int i = 0; i < max_retries; i++) {
-                        flaskRunning = sh(script: "curl -s http://127.0.0.1:5000/health || echo 'down'", returnStdout: true).trim()
-                        if (flaskRunning != "down") {
-                            break
-                        }
-                        sleep 3
-                    }
-
-                    if (flaskRunning == "down") {
-                        error "❌ ERROR: Flask server failed to start!"
-                    }
-
-                    echo "✅ Flask application started successfully!"
+     stage('Start Flask Server') {
+    steps {
+        script {
+            echo "🚀 Starting Flask application..."
+            sh 'nohup python3 app.py > flask.log 2>&1 &'
+            sleep 5
+            
+            def retries = 5
+            def success = false
+            
+            for (int i = 0; i < retries; i++) {
+                def response = sh(script: "curl -s http://127.0.0.1:5000/health", returnStdout: true).trim()
+                if (response.contains('"status":"up"')) {
+                    echo "✅ Flask server is up!"
+                    success = true
+                    break
                 }
+                echo "Flask is still down, retrying in 3 seconds..."
+                sleep 3
+            }
+            
+            if (!success) {
+                error("❌ ERROR: Flask server failed to start!")
             }
         }
+    }
+}
 
         stage('Generate Test Cases') {
             steps {
