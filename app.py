@@ -95,6 +95,7 @@ def save_as_csv(test_cases, user_filename):
                     "Test Case ID": test_case_id,
                     "Test Summary": case.get("Test Case Name", ""),
                     "Test Type": "Manual",
+                     "Test Step": {test_case_id} ,
                     "Test Data": json.dumps({
                         "Request": case.get("Request", {}),
                         "Request Headers": case.get("Request Headers", {}),
@@ -106,7 +107,7 @@ def save_as_csv(test_cases, user_filename):
                         "Error Code": case.get("Error Code", ""),
                         "Error Message": case.get("Error Message", "")
                     }),
-                    "Test Step": f"Step for {test_case_id}"  # ✅ Now properly using test_case_id
+                    
                 })
                 
         return filepath
