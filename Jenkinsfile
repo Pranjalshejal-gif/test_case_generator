@@ -25,8 +25,12 @@ pipeline {
             steps {
                 sh '''
                     echo "📌 Installing Python dependencies..."
-                    pip3 install --no-cache-dir -r requirements.txt
+                    
+                     pip3 install --user --no-cache-dir --force-reinstall pillow
+                     pip3 install --no-cache-dir -r requirements.txt
+                
                     echo "✅ Dependencies installed"
+
                 '''
             }
         }
