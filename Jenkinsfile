@@ -23,9 +23,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    pip install --user -r requirements.txt
-                    pip install --user pymupdf flask requests pillow pytesseract
-                    
+                    python3 -m pip install --user --upgrade pip
+                    python3 -m pip install --user -r requirements.txt
                 '''
             }
         }
@@ -56,33 +55,38 @@ pipeline {
             }
         }
 
-     stage('Start Flask Server') {
-    steps {
-        script {
-            echo "🚀 Starting Flask application..."
-            sh 'nohup python3 app.py > flask.log 2>&1 &'
-            sleep 5
-            
-            def retries = 5
-            def success = false
-            
-            for (int i = 0; i < retries; i++) {
-                def response = sh(script: "curl -s http://127.0.0.1:5000/health", returnStdout: true).trim()
-                if (response.contains('"status":"up"')) {
-                    echo "✅ Flask server is up!"
-                    success = true
-                    break
+        stage('Start Flask Server') {
+            steps {
+                script {
+                    echo "🚀 Starting Flask application..."
+                    sh '''
+                        chmod -R 777 .
+                        nohup python3 app.py > flask.log 2>&1 &
+                        sleep 5
+                    '''
+
+                    def retries = 5
+                    def success = false
+                    
+                    for (int i = 0; i < retries; i++) {
+                        def response = sh(script: "curl -s http://127.0.0.1:5000/health || echo 'error'", returnStdout: true).trim()
+                        echo "Flask Health Check Response: ${response}"
+                        if (response.contains('"status":"up"')) {
+                            echo "✅ Flask server is up!"
+                            success = true
+                            break
+                        }
+                        echo "Flask is still down, retrying in 3 seconds..."
+                        sleep 3
+                    }
+                    
+                    if (!success) {
+                        sh 'cat flask.log'  // Show Flask logs to debug
+                        error("❌ ERROR: Flask server failed to start!")
+                    }
                 }
-                echo "Flask is still down, retrying in 3 seconds..."
-                sleep 3
-            }
-            
-            if (!success) {
-                error("❌ ERROR: Flask server failed to start!")
             }
         }
-    }
-}
 
         stage('Generate Test Cases') {
             steps {
@@ -157,6 +161,7 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline failed! Check logs for issues.'
+            sh 'cat flask.log'  // Show Flask logs on failure
         }
     }
 }
