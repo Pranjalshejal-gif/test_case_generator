@@ -183,6 +183,33 @@ def generate_from_image():
 
     return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", os.path.splitext(os.path.basename(image_path))[0])
 
+@app.route('/generate_combined', methods=['POST'])
+def generate_from_multiple_sources():
+    """Generates test cases from a combination of text, PDF, and image input."""
+    data = request.json or {}
+    topic = data.get("topic", "")
+    pdf_path = data.get("pdf_path", "")
+    image_path = data.get("image_path", "")
+    user_filename = data.get("filename", "test_cases")
+
+    combined_prompt = topic.strip()
+
+    if pdf_path and os.path.exists(pdf_path):
+        pdf_text = extract_text_from_pdf(pdf_path)
+        if pdf_text:
+            combined_prompt += f"\n\n### Extracted from PDF:\n{pdf_text}"
+
+    if image_path and os.path.exists(image_path):
+        image_text = extract_text_from_image(image_path)
+        if image_text:
+            combined_prompt += f"\n\n### Extracted from Image:\n{image_text}"
+
+    if not combined_prompt.strip():
+        return jsonify({"error": "No valid input provided."}), 400
+
+    return generate_and_save_test_cases(combined_prompt, user_filename)
+
+
 
 def generate_and_save_test_cases(prompt, filename):
     """Generates test cases dynamically based on the user prompt."""
