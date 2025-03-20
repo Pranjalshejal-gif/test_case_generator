@@ -42,11 +42,35 @@ def extract_text_from_image(image_path):
 
 
 def generate_test_cases(prompt):
-    """Generates test cases dynamically based on user input."""
+    """Generates test cases dynamically using AI and ensures JSON format."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)  # AI determines the number of test cases
-        return response.text.strip() if response and response.text else {"error": "No response from AI."}
+        structured_prompt = f"""
+        Generate test cases based on the following requirements:
+        {prompt}
+        
+        Return the response in JSON format as a list of dictionaries. Each dictionary should have the following keys:
+        - "Test Case ID"
+        - "Test Case Name"
+        - "Request"
+        - "Request Headers"
+        - "Response"
+        - "Response Headers"
+        - "Expected Message"
+        - "Error Code"
+        - "Error Message"
+
+        Ensure the JSON output does not include markdown or additional text, just raw JSON.
+        """
+
+        response = model.generate_content(structured_prompt)
+
+        if not response or not response.text:
+            return {"error": "No response from AI."}
+
+        cleaned_output = re.sub(r"```json|```", "", response.text.strip())  # Remove markdown formatting
+        return cleaned_output  # Return cleaned JSON string
+
     except Exception as e:
         return {"error": f"Error generating test cases: {str(e)}"}
 
@@ -54,8 +78,17 @@ def generate_test_cases(prompt):
 def parse_test_cases(ai_output):
     """Parses AI output into JSON format."""
     try:
-        cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
-        return json.loads(cleaned_output) if cleaned_output.startswith("[") and cleaned_output.endswith("]") else {"error": "Invalid JSON format."}
+        if isinstance(ai_output, dict):  # AI returned an error
+            return ai_output
+
+        cleaned_output = ai_output.strip()
+
+        # Validate if it starts and ends with a list structure
+        if not (cleaned_output.startswith("[") and cleaned_output.endswith("]")):
+            return {"error": "Invalid JSON format: AI response is not a valid list."}
+
+        return json.loads(cleaned_output)  # Convert string to JSON
+
     except json.JSONDecodeError as e:
         return {"error": f"Error parsing AI output: {str(e)}"}
 
