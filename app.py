@@ -153,7 +153,7 @@ def generate():
  
 #     return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(pdf_path))[0])
  
- @app.route('/generate_pdf', methods=['POST'])
+@app.route('/generate_pdf', methods=['POST'])
 def generate_from_pdf():
     """Generates test cases from a provided PDF file path."""
     pdf_path = request.form.get("pdf_path")
