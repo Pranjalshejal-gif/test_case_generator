@@ -41,127 +41,38 @@ def extract_text_from_image(image_path):
         return None
  
  
-# def generate_test_cases(prompt):
-#     """Generates test cases dynamically using AI and ensures JSON format."""
-#     try:
-#         model = genai.GenerativeModel("gemini-2.0-flash")
-#         structured_prompt = f"""
-#         Generate test cases based on the following requirements:
-#         {prompt}
-        
-#         Return the response in JSON format as a list of dictionaries. Each dictionary should have the following keys:
-#         - "Test Case ID"
-#         - "Test Case Name"
-#         - "Request"
-#         - "Request Headers"
-#         - "Response"
-#         - "Response Headers"
-#         - "Expected Message"
-#         - "Error Code"
-#         - "Error Message"
- 
-#         Ensure the JSON output does not include markdown or additional text, just raw JSON.
-#         """
- 
-#         response = model.generate_content(structured_prompt)
- 
-#         if not response or not response.text:
-#             return {"error": "No response from AI."}
- 
-#         cleaned_output = re.sub(r"```json|```", "", response.text.strip())  # Remove markdown formatting
-#         return cleaned_output  # Return cleaned JSON string
- 
-#     except Exception as e:
-#         return {"error": f"Error generating test cases: {str(e)}"}
- 
-def generate_test_cases(prompt):
-    """Generates test cases dynamically using AI and ensures JSON format."""
+def generate_test_cases(prompt, num_cases=5):
+    """Generate test cases using Google Gemini AI."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
-        structured_prompt = f"""
-        Generate exactly the number of test cases specified in the request below. 
-        Ensure the response is a **valid JSON list** with no additional text.
-        
-        **Request:** {prompt}
-
-        **Response Format:**  
-        Return a JSON **array** (list of dictionaries), where each dictionary contains:
+        detailed_prompt = f"""
+        Generate {num_cases} detailed test cases for: {prompt}.
+        Each test case should be a JSON object with these fields:
         - "Test Case ID"
         - "Test Case Name"
         - "Request"
-        - "Request Headers"
         - "Response"
+        - "Request Headers"
         - "Response Headers"
         - "Expected Message"
         - "Error Code"
         - "Error Message"
-
-        **Example Output (Strictly JSON, no markdown, no explanations)**:
-        ```json
-        [
-          {{"Test Case ID": "TC001", "Test Case Name": "Valid UPI Payment", "Request": "..."}},
-          {{"Test Case ID": "TC002", "Test Case Name": "Invalid UPI ID", "Request": "..."}}
-        ]
-        ```
-        Ensure the output **only contains a JSON list** with the specified number of test cases.
+        Return ONLY a JSON array.
         """
-
-        response = model.generate_content(structured_prompt)
-
-        if not response or not response.text:
-            return {"error": "No response from AI."}
-
-        # Extract JSON content if AI returns extra text
-        cleaned_output = re.sub(r"```json|```", "", response.text.strip())  # Remove markdown blocks
-        return cleaned_output  # Return raw JSON string
-
+        response = model.generate_content(detailed_prompt)
+        return response.text.strip() if response and response.text else {"error": "No response from AI."}
     except Exception as e:
         return {"error": f"Error generating test cases: {str(e)}"}
-
  
-# def parse_test_cases(ai_output):
-#     """Parses AI output into JSON format."""
-#     try:
-#         if isinstance(ai_output, dict):  # AI returned an error
-#             return ai_output
  
-#         cleaned_output = ai_output.strip()
- 
-#         # Validate if it starts and ends with a list structure
-#         if not (cleaned_output.startswith("[") and cleaned_output.endswith("]")):
-#             return {"error": "Invalid JSON format: AI response is not a valid list."}
- 
-#         return json.loads(cleaned_output)  # Convert string to JSON
- 
-#     except json.JSONDecodeError as e:
-#         return {"error": f"Error parsing AI output: {str(e)}"}
-
 def parse_test_cases(ai_output):
-    """Parses AI output into valid JSON format safely."""
+    """Parses AI output into JSON format."""
     try:
-        if isinstance(ai_output, dict):  # AI returned an error
-            return ai_output
-
-        cleaned_output = ai_output.strip()
-
-        # Extract JSON content if AI added explanations
-        match = re.search(r"(\[.*\])", cleaned_output, re.DOTALL)
-        if match:
-            cleaned_output = match.group(1)  # Extract only JSON content
-
-        # Fix formatting issues like trailing commas
-        cleaned_output = re.sub(r",\s*]", "]", cleaned_output)  # Remove trailing commas in lists
-        cleaned_output = re.sub(r",\s*}", "}", cleaned_output)  # Remove trailing commas in dictionaries
-
-        # Validate final JSON structure
-        if not (cleaned_output.startswith("[") and cleaned_output.endswith("]")):
-            return {"error": "Invalid JSON format: AI response is not a valid list."}
-
-        return json.loads(cleaned_output)  # Convert string to JSON
-
+        cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
+        return json.loads(cleaned_output) if cleaned_output.startswith("[") and cleaned_output.endswith("]") else {"error": "Invalid JSON format."}
     except json.JSONDecodeError as e:
-        return {"error": f"Error parsing AI JSON response: {str(e)}"}
-
+        return {"error": f"Error parsing AI output: {str(e)}"}
+ 
  
 def save_as_csv(test_cases, user_filename):
     """Saves parsed test cases to a CSV file."""
@@ -169,7 +80,8 @@ def save_as_csv(test_cases, user_filename):
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
  
-    csv_headers = ["Test Case ID", "Test Summary", "Test Step", "Test Type", "Test Data", "Expected Result"]
+    # ✅ Added "Test Step" column in headers
+    csv_headers = ["Test Case ID", "Test Summary","Test Step", "Test Type", "Test Data", "Expected Result"]
  
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
@@ -177,13 +89,13 @@ def save_as_csv(test_cases, user_filename):
             writer.writeheader()
  
             for case in test_cases:
-                test_case_id = case.get("Test Case ID", "")
- 
+                test_case_id = case.get("Test Case ID", "")  # ✅ Defined before use
+                
                 writer.writerow({
                     "Test Case ID": test_case_id,
                     "Test Summary": case.get("Test Case Name", ""),
                     "Test Type": "Manual",
-                    "Test Step": test_case_id,
+                     "Test Step": {test_case_id} ,
                     "Test Data": json.dumps({
                         "Request": case.get("Request", {}),
                         "Request Headers": case.get("Request Headers", {}),
@@ -195,12 +107,12 @@ def save_as_csv(test_cases, user_filename):
                         "Error Code": case.get("Error Code", ""),
                         "Error Message": case.get("Error Message", "")
                     }),
+                    
                 })
                 
         return filepath
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
- 
  
 @app.route('/')
 def home():
@@ -209,15 +121,17 @@ def home():
  
 @app.route('/generate', methods=['POST'])
 def generate():
-    """Generates test cases from text input based on user prompt."""
-    data = request.json or {}  
-    topic = data.get("topic")  
+    """Generates test cases from text input."""
+    data = request.json
+    topic = data.get("topic")
+    num_cases = min(int(data.get("num_cases", 5)), 100)  # Limit to 100
+ 
     user_filename = data.get("filename", "test_cases")
  
     if not topic:
         return jsonify({"error": "No topic provided."}), 400
  
-    return generate_and_save_test_cases(topic, user_filename)
+    return generate_and_save_test_cases(topic, num_cases, user_filename)
  
  
 @app.route('/generate_pdf', methods=['POST'])
@@ -232,9 +146,12 @@ def generate_from_pdf():
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the provided PDF file."}), 500
  
+    # num_cases = int(request.form.get("num_cases", 5))
+    num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100
+ 
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
  
-    return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", os.path.splitext(os.path.basename(pdf_path))[0])
+    return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(pdf_path))[0])
  
  
 @app.route('/generate_image', methods=['POST'])
@@ -249,42 +166,16 @@ def generate_from_image():
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the provided image."}), 500
  
+    # num_cases = int(request.form.get("num_cases", 5))
+    num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100
+ 
     user_prompt = request.form.get("prompt", "Generate test cases based on this UML diagram.")
  
-    return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", os.path.splitext(os.path.basename(image_path))[0])
- 
-@app.route('/generate_combined', methods=['POST'])
-def generate_from_multiple_sources():
-    """Generates test cases from a combination of text, PDF, and image input."""
-    data = request.json or {}
-    topic = data.get("topic", "")
-    pdf_path = data.get("pdf_path", "")
-    image_path = data.get("image_path", "")
-    user_filename = data.get("filename", "test_cases")
- 
-    combined_prompt = topic.strip()
- 
-    if pdf_path and os.path.exists(pdf_path):
-        pdf_text = extract_text_from_pdf(pdf_path)
-        if pdf_text:
-            combined_prompt += f"\n\n### Extracted from PDF:\n{pdf_text}"
- 
-    if image_path and os.path.exists(image_path):
-        image_text = extract_text_from_image(image_path)
-        if image_text:
-            combined_prompt += f"\n\n### Extracted from Image:\n{image_text}"
- 
-    if not combined_prompt.strip():
-        return jsonify({"error": "No valid input provided."}), 400
- 
-    return generate_and_save_test_cases(combined_prompt, user_filename)
+    return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(image_path))[0])
  
  
- 
-def generate_and_save_test_cases(prompt, filename):
-    """Generates test cases dynamically based on the user prompt."""
-    ai_output = generate_test_cases(prompt)  # AI determines the number of test cases
- 
+def generate_and_save_test_cases(prompt, num_cases, filename):
+    ai_output = generate_test_cases(prompt, num_cases)
     if isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify(ai_output), 500
  
@@ -293,11 +184,7 @@ def generate_and_save_test_cases(prompt, filename):
         return jsonify(parsed_test_cases), 500
  
     csv_filepath = save_as_csv(parsed_test_cases, filename)
-    return jsonify({
-        "message": "Test cases generated successfully!",
-        "csv_filename": os.path.basename(csv_filepath),
-        "csv_filepath": csv_filepath
-    })
+    return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
  
  
 @app.route('/health', methods=['GET'])
@@ -317,4 +204,3 @@ def download_file(filename):
  
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
- 

@@ -3,11 +3,12 @@ pipeline {
  
     environment {
         GIT_REPO = 'https://github.com/Pranjalshejal-gif/test_case_generator.git'
-        PYTHON_BIN = '/usr/bin/python3' // Update this path if necessary
+        PYTHON_BIN = '/usr/bin/python3'  // Update this path if necessary
     }
  
     parameters {
         string(name: 'TEST_TOPIC', defaultValue: '', description: 'Enter the test topic')
+        string(name: 'NUM_CASES', defaultValue: '5', description: 'Enter number of test cases')
         string(name: 'CSV_FILENAME', defaultValue: 'test_cases', description: 'Enter CSV filename')
         string(name: 'PDF_FILE_PATH', defaultValue: '', description: 'Path to PDF file')
         string(name: 'PLANTUML_IMAGE_PATH', defaultValue: '', description: 'Path to PlantUML image')
@@ -23,10 +24,13 @@ pipeline {
         stage('Install Python Dependencies') {
             steps {
                 sh '''
-                    echo "Installing Python dependencies..."
-                    pip3 install --user --no-cache-dir --force-reinstall pillow
-                    pip3 install --no-cache-dir -r requirements.txt
-                    echo "Dependencies installed"
+                    echo " Installing Python dependencies..."
+                    
+                     pip3 install --user --no-cache-dir --force-reinstall pillow
+                     pip3 install --no-cache-dir -r requirements.txt
+                
+                    echo " Dependencies installed"
+ 
                 '''
             }
         }
@@ -52,7 +56,7 @@ pipeline {
                     }
  
                     if (flaskRunning == "down") {
-                        error "ERROR: Flask server failed to start! Check flask_output.log"
+                        error " ERROR: Flask server failed to start! Check flask_output.log"
                     }
  
                     echo "Flask application started successfully!"
@@ -60,49 +64,40 @@ pipeline {
             }
         }
  
-        stage('Generate Test Cases') {
-            steps {
-                script {
-                    def jsonResponse = ""
+       stage('Generate Test Cases') {
+    steps {
+        script {
+            def jsonResponse = ""
  
-                    if (params.TEST_TOPIC && params.PDF_FILE_PATH && params.PLANTUML_IMAGE_PATH) {
-                        echo "Processing all inputs: Text, PDF, and Image..."
-                        jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate_combined \
-                            -H "Content-Type: application/json" \
-                            -d '{"topic": "${params.TEST_TOPIC}", "pdf_path": "${params.PDF_FILE_PATH}", "image_path": "${params.PLANTUML_IMAGE_PATH}", "filename": "${params.CSV_FILENAME}"}'
-                        """, returnStdout: true).trim()
-                    } else if (params.PDF_FILE_PATH) {
-                        echo "Processing PDF file with topic: ${params.PDF_FILE_PATH}"
-                        jsonResponse = sh(script: """
-                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
-                             -F "pdf_path=${params.PDF_FILE_PATH}" \
-                             -F "prompt=${params.TEST_TOPIC}" \
-                            //  -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
-                             -F "filename=${params.CSV_FILENAME}"
-                               """, returnStdout: true).trim()
-                    } else if (params.PLANTUML_IMAGE_PATH) {
-                        echo "Processing Image file with topic: ${params.PLANTUML_IMAGE_PATH}"
-                        jsonResponse = sh(script: """
-                           curl -s -X POST http://127.0.0.1:5000/generate_image \
-                           -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
-                           -F "prompt=${params.TEST_TOPIC}" \
-                        //    -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
-                           -F "filename=${params.CSV_FILENAME}"
-                          """, returnStdout: true).trim()
-                    } else {
-                        echo "Generating test cases from text.."
-                        jsonResponse = sh(script: """
-                                curl -s -X POST http://127.0.0.1:5000/generate \
-                               -H "Content-Type: application/json" \
-                               -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${Math.min(params.NUM_CASES.toInteger(), 100)}, "filename": "${params.CSV_FILENAME}"}'
-                               """, returnStdout: true).trim()
-                    }
-
-                    
+            if (params.PDF_FILE_PATH) {
+                echo " Processing PDF file: ${params.PDF_FILE_PATH}"
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate_pdf \
+                    -F "pdf_path=${params.PDF_FILE_PATH}" \
+                    -F "prompt=${params.TEST_TOPIC}" \
+                    -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
+                    -F "filename=${params.CSV_FILENAME}"
+                """, returnStdout: true).trim()
+            } else if (params.PLANTUML_IMAGE_PATH) {
+                echo " Processing PlantUML image: ${params.PLANTUML_IMAGE_PATH}"
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate_image \
+                    -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
+                    -F "prompt=${params.TEST_TOPIC}" \
+                    -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
+                    -F "filename=${params.CSV_FILENAME}"
+                """, returnStdout: true).trim()
+            } else {
+                echo " Generating test cases from text..."
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate \
+                    -H "Content-Type: application/json" \
+                    -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${Math.min(params.NUM_CASES.toInteger(), 100)}, "filename": "${params.CSV_FILENAME}"}'
+                """, returnStdout: true).trim()
+            }
  
-                    echo "Response: ${jsonResponse}"
-
+            echo "🔹 API Response: ${jsonResponse}"
+ 
             if (!jsonResponse || jsonResponse.contains("404 Not Found") || jsonResponse.contains("500 Internal Server Error")) {
                 error " ERROR: API request failed. Check Flask logs."
             }
@@ -116,10 +111,10 @@ pipeline {
  
             echo "CSV file generated: ${csvFilepath}"
             env.GENERATED_CSV = csvFilepath
-                }
-            }
         }
-        
+    }
+}
+ 
  
         stage('Download Test Cases CSV') {
             steps {
@@ -136,14 +131,13 @@ pipeline {
             }
         }
     }
-    post{
-        success{
-            echo 'Pipeline executed successfully!'
+ 
+    post {
+        success {
+            echo ' Pipeline executed successfully!'
         }
-        failure{
-            echo 'Pipeline failed ! check logs for issues'
+        failure {
+            echo ' Pipeline failed! Check logs for issues.'
         }
     }
 }
- 
- 
