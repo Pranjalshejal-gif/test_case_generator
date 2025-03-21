@@ -72,17 +72,33 @@ pipeline {
                             -H "Content-Type: application/json" \
                             -d '{"topic": "${params.TEST_TOPIC}", "pdf_path": "${params.PDF_FILE_PATH}", "image_path": "${params.PLANTUML_IMAGE_PATH}", "filename": "${params.CSV_FILENAME}"}'
                         """, returnStdout: true).trim()
+                    } else if (params.PDF_FILE_PATH && params.TEST_TOPIC) {
+                        echo "Processing PDF file with topic: ${params.TEST_TOPIC}"
+                        jsonResponse = sh(script: """
+                            curl -s -X POST http://127.0.0.1:5000/generate_pdf \
+                            -H "Content-Type: application/json" \
+                            -d '{"pdf_path": "${params.PDF_FILE_PATH}", "topic": "${params.TEST_TOPIC}", "filename": "${params.CSV_FILENAME}"}'
+                        """, returnStdout: true).trim()
+                    } else if (params.PLANTUML_IMAGE_PATH && params.TEST_TOPIC) {
+                        echo "Processing Image file with topic: ${params.TEST_TOPIC}"
+                        jsonResponse = sh(script: """
+                            curl -s -X POST http://127.0.0.1:5000/generate_image \
+                            -H "Content-Type: application/json" \
+                            -d '{"image_path": "${params.PLANTUML_IMAGE_PATH}", "topic": "${params.TEST_TOPIC}", "filename": "${params.CSV_FILENAME}"}'
+                        """, returnStdout: true).trim()
                     } else if (params.PDF_FILE_PATH) {
                         echo "Processing PDF file: ${params.PDF_FILE_PATH}"
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_pdf \
-                            -F "pdf_path=${params.PDF_FILE_PATH}"
+                            -H "Content-Type: application/json" \
+                            -d '{"pdf_path": "${params.PDF_FILE_PATH}", "filename": "${params.CSV_FILENAME}"}'
                         """, returnStdout: true).trim()
                     } else if (params.PLANTUML_IMAGE_PATH) {
                         echo "Processing Image file: ${params.PLANTUML_IMAGE_PATH}"
                         jsonResponse = sh(script: """
                             curl -s -X POST http://127.0.0.1:5000/generate_image \
-                            -F "image_path=${params.PLANTUML_IMAGE_PATH}"
+                            -H "Content-Type: application/json" \
+                            -d '{"image_path": "${params.PLANTUML_IMAGE_PATH}", "filename": "${params.CSV_FILENAME}"}'
                         """, returnStdout: true).trim()
                     } else if (params.TEST_TOPIC) {
                         echo "Processing topic: ${params.TEST_TOPIC}"
