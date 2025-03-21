@@ -87,7 +87,18 @@ pipeline {
                     -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
                     -F "filename=${params.CSV_FILENAME}"
                 """, returnStdout: true).trim()
-            } else {
+            } else if(params.PDF_FILE_PATH && params.PLANTUML_IMAGE_PATH)
+           {
+                echo " Processing both PDF and Image..."
+                jsonResponse = sh(script: """
+                    curl -s -X POST http://127.0.0.1:5000/generate_pdf_image \
+                    -F "pdf_path=${params.PDF_FILE_PATH}" \
+                    -F "image_path=${params.PLANTUML_IMAGE_PATH}" \
+                    -F "prompt=${params.TEST_TOPIC}" \
+                    -F "num_cases=${Math.min(params.NUM_CASES.toInteger(), 100)}" \
+                    -F "filename=${params.CSV_FILENAME}"
+                """, returnStdout: true).trim()
+          }else {
                 echo " Generating test cases from text..."
                 jsonResponse = sh(script: """
                     curl -s -X POST http://127.0.0.1:5000/generate \

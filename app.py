@@ -231,6 +231,56 @@ def generate_from_image():
  
     return generate_and_save_test_cases(f"{user_prompt}\n{extracted_text}", num_cases, os.path.splitext(os.path.basename(image_path))[0])
  
+@app.route('/generate_pdf_image', methods=['POST'])
+def generate_from_pdf_and_image():
+    """Generates test cases from both PDF and Image files."""
+    
+    pdf_path = request.form.get("pdf_path")
+    image_path = request.form.get("image_path")
+    
+    if not pdf_path or not os.path.exists(pdf_path):
+        return jsonify({"error": "Invalid or missing PDF file path."}), 400
+    
+    if not image_path or not os.path.exists(image_path):
+        return jsonify({"error": "Invalid or missing image file path."}), 400
+    
+    # Extract text from both PDF and Image
+    pdf_text = extract_text_from_pdf(pdf_path)
+    image_text = extract_text_from_image(image_path)
+    
+    if not pdf_text and not image_text:
+        return jsonify({"error": "Could not extract text from the provided files."}), 500
+    
+    combined_text = f"{pdf_text}\n{image_text}" if pdf_text and image_text else (pdf_text or image_text)
+    
+    num_cases = min(int(request.form.get("num_cases", 5)), 100)
+    user_prompt = request.form.get("prompt", "Generate test cases based on these documents.")
+    
+    print("\n🔹 Combined Extracted Text:\n", combined_text[:1000])  # Print first 1000 chars for debugging
+    
+    ai_output = generate_test_cases(f"{user_prompt}\n{combined_text}", num_cases)
+    
+    print("\n🔹 AI Raw Response:\n", ai_output)  # Debugging: Print raw AI response
+    
+    if not ai_output or isinstance(ai_output, dict) and "error" in ai_output:
+        return jsonify({"error": "AI failed to generate test cases."}), 500
+    
+    parsed_test_cases = parse_test_cases(ai_output)
+    
+    print("\n🔹 Parsed Test Cases:\n", parsed_test_cases)  # Debugging: Print parsed test cases
+    
+    if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
+        return jsonify(parsed_test_cases), 500
+    
+    csv_filename = f"{os.path.splitext(os.path.basename(pdf_path))[0]}_{os.path.splitext(os.path.basename(image_path))[0]}"
+    csv_filepath = save_as_csv(parsed_test_cases, csv_filename)
+    
+    return jsonify({
+        "message": "Test cases generated successfully!",
+        "csv_filename": os.path.basename(csv_filepath),
+        "csv_filepath": csv_filepath
+    })
+
  
 def generate_and_save_test_cases(prompt, num_cases, filename):
     ai_output = generate_test_cases(prompt, num_cases)
