@@ -93,46 +93,82 @@ def parse_test_cases(ai_output):
 
     
  
+# def save_as_csv(test_cases, user_filename):
+#     """Saves parsed test cases to a CSV file."""
+#     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#     filename = f"{user_filename}_{timestamp}.csv"
+#     filepath = os.path.join(WORKSPACE, filename)
+ 
+#     # ✅ Added "Test Step" column in headers
+#     csv_headers = ["Test Case ID", "Test Summary","Test Step", "Test Type", "Test Data", "Expected Result"]
+ 
+#     try:
+#         with open(filepath, "w", newline="", encoding="utf-8") as file:
+#             writer = csv.DictWriter(file, fieldnames=csv_headers)
+#             writer.writeheader()
+ 
+#             for case in test_cases:
+#                 test_case_id = case.get("Test Case ID", "")  # ✅ Defined before use
+                
+#                 writer.writerow({
+#                     "Test Case ID": test_case_id,
+#                     "Test Summary": case.get("Test Case Name", ""),
+#                     "Test Type": "Manual",
+#                      "Test Step": {test_case_id} ,
+#                     "Test Data": json.dumps({
+#                         "Request": case.get("Request", {}),
+#                         "Request Headers": case.get("Request Headers", {}),
+#                         "Response": case.get("Response", {}),
+#                         "Response Headers": case.get("Response Headers", {})
+#                     }),
+#                     "Expected Result": json.dumps({
+#                         "Expected Message": case.get("Expected Message", ""),
+#                         "Error Code": case.get("Error Code", ""),
+#                         "Error Message": case.get("Error Message", "")
+#                     }),
+                    
+#                 })
+                
+#         return filepath
+#     except Exception as e:
+#         return {"error": f"Error saving CSV: {str(e)}"}
+ 
 def save_as_csv(test_cases, user_filename):
-    """Saves parsed test cases to a CSV file."""
+    """Saves parsed test cases to a CSV file in an editable format."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
- 
-    # ✅ Added "Test Step" column in headers
-    csv_headers = ["Test Case ID", "Test Summary","Test Step", "Test Type", "Test Data", "Expected Result"]
- 
+
+    csv_headers = ["Test Case ID", "Test Summary", "Test Step", "Test Type", "Test Data", "Expected Result"]
+
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=csv_headers)
             writer.writeheader()
- 
+
             for case in test_cases:
-                test_case_id = case.get("Test Case ID", "")  # ✅ Defined before use
-                
                 writer.writerow({
-                    "Test Case ID": test_case_id,
+                    "Test Case ID": case.get("Test Case ID", ""),
                     "Test Summary": case.get("Test Case Name", ""),
                     "Test Type": "Manual",
-                     "Test Step": {test_case_id} ,
+                    "Test Step": case.get("Test Case ID", ""),  # Assigning test case ID as test step
                     "Test Data": json.dumps({
                         "Request": case.get("Request", {}),
                         "Request Headers": case.get("Request Headers", {}),
                         "Response": case.get("Response", {}),
                         "Response Headers": case.get("Response Headers", {})
-                    }),
+                    }, indent=4),  # Pretty format for readability
                     "Expected Result": json.dumps({
                         "Expected Message": case.get("Expected Message", ""),
                         "Error Code": case.get("Error Code", ""),
                         "Error Message": case.get("Error Message", "")
-                    }),
-                    
+                    }, indent=4),  # Pretty format for readability
                 })
-                
+
         return filepath
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
- 
+    
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -305,9 +341,15 @@ def download_file(filename):
     """Downloads the generated CSV file."""
     file_path = os.path.join(WORKSPACE, filename)
     try:
-        return send_file(file_path, as_attachment=True)
+        return send_file(
+            file_path,
+            as_attachment=True,
+            mimetype="text/csv",  # Explicitly setting MIME type for CSV
+            cache_timeout=0  # Prevent caching issues
+        )
     except FileNotFoundError:
         return jsonify({"error": "File not found."}), 404
+
  
  
 if __name__ == "__main__":
