@@ -65,14 +65,27 @@ def generate_test_cases(prompt, num_cases=5):
         return {"error": f"Error generating test cases: {str(e)}"}
  
  
+# def parse_test_cases(ai_output):
+#     """Parses AI output into JSON format."""
+#     try:
+#         cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
+#         return json.loads(cleaned_output) if cleaned_output.startswith("[") and cleaned_output.endswith("]") else {"error": "Invalid JSON format."}
+#     except json.JSONDecodeError as e:
+#         return {"error": f"Error parsing AI output: {str(e)}"}
+ 
 def parse_test_cases(ai_output):
     """Parses AI output into JSON format."""
     try:
-        cleaned_output = re.sub(r"```json|```", "", ai_output).strip()
-        return json.loads(cleaned_output) if cleaned_output.startswith("[") and cleaned_output.endswith("]") else {"error": "Invalid JSON format."}
+        # Extract JSON part only
+        json_match = re.search(r"\[.*\]", ai_output, re.DOTALL)
+        if json_match:
+            json_text = json_match.group(0)
+            return json.loads(json_text)  # Convert to Python list
+        else:
+            return {"error": "No valid JSON found in AI response."}
     except json.JSONDecodeError as e:
         return {"error": f"Error parsing AI output: {str(e)}"}
- 
+    
  
 def save_as_csv(test_cases, user_filename):
     """Saves parsed test cases to a CSV file."""
