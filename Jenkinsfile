@@ -121,20 +121,20 @@ pipeline {
         }
         
  
-        // stage('Download Test Cases CSV') {
-        //     steps {
-        //         script {
-        //             echo "⬇️ Downloading generated CSV file..."
-        //             def downloadResponse = sh(script: "curl -s -o ${params.CSV_FILENAME}.csv http://127.0.0.1:5000/download/${env.GENERATED_CSV} || echo 'error'", returnStdout: true).trim()
+        stage('Download Test Cases CSV') {
+            steps {
+                script {
+                    echo "⬇️ Downloading generated CSV file..."
+                    def downloadResponse = sh(script: "curl -s -o ${params.CSV_FILENAME}.csv http://127.0.0.1:5000/download/${env.GENERATED_CSV} || echo 'error'", returnStdout: true).trim()
  
-        //             if (downloadResponse == "error") {
-        //                 error " ERROR: Failed to download CSV file. Check Flask logs."
-        //             }
+                    if (downloadResponse == "error") {
+                        error " ERROR: Failed to download CSV file. Check Flask logs."
+                    }
  
-        //             echo "CSV file downloaded successfully!"
-        //         }
-        //     }
-        // }
+                    echo "CSV file downloaded successfully!"
+                }
+            }
+        }
     }
     post{
         success{
