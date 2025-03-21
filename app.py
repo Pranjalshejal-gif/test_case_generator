@@ -76,15 +76,21 @@ def generate_test_cases(prompt, num_cases=5):
 def parse_test_cases(ai_output):
     """Parses AI output into JSON format."""
     try:
-        # Extract JSON part only
+        # Extract JSON from AI response
         json_match = re.search(r"\[.*\]", ai_output, re.DOTALL)
         if json_match:
             json_text = json_match.group(0)
-            return json.loads(json_text)  # Convert to Python list
+
+            # Replace single quotes with double quotes if needed
+            json_text = json_text.replace("'", '"')
+
+            # Parse and return JSON
+            return json.loads(json_text)
         else:
             return {"error": "No valid JSON found in AI response."}
     except json.JSONDecodeError as e:
-        return {"error": f"Error parsing AI output: {str(e)}"}
+        return {"error": f"Error parsing AI output: {str(e)}"} 
+
     
  
 def save_as_csv(test_cases, user_filename):
@@ -169,6 +175,7 @@ def generate():
 @app.route('/generate_pdf', methods=['POST'])
 def generate_from_pdf():
     """Generates test cases from a provided PDF file path."""
+    
     pdf_path = request.form.get("pdf_path")
 
     if not pdf_path or not os.path.exists(pdf_path):
@@ -178,27 +185,32 @@ def generate_from_pdf():
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the provided PDF file."}), 500
 
-    num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100
+    num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100 test cases
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
 
-    print("\n🔹 Extracted PDF Text:\n", extracted_text)  # Debugging print
+    print("\n🔹 Extracted PDF Text:\n", extracted_text[:1000])  # Print first 1000 chars for debugging
+
     ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
 
-    print("\n🔹 AI Raw Response:\n", ai_output)  # Debugging print
+    print("\n🔹 AI Raw Response:\n", ai_output)  # Debugging: Print raw AI response
 
-    if isinstance(ai_output, dict) and "error" in ai_output:
-        return jsonify(ai_output), 500
+    if not ai_output or isinstance(ai_output, dict) and "error" in ai_output:
+        return jsonify({"error": "AI failed to generate test cases."}), 500
 
     parsed_test_cases = parse_test_cases(ai_output)
-    
-    print("\n🔹 Parsed Test Cases:\n", parsed_test_cases)  # Debugging print
+
+    print("\n🔹 Parsed Test Cases:\n", parsed_test_cases)  # Debugging: Print parsed test cases
 
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
 
     csv_filepath = save_as_csv(parsed_test_cases, os.path.splitext(os.path.basename(pdf_path))[0])
-    return jsonify({"message": "Test cases generated successfully!", "csv_filename": os.path.basename(csv_filepath), "csv_filepath": csv_filepath})
 
+    return jsonify({
+        "message": "Test cases generated successfully!",
+        "csv_filename": os.path.basename(csv_filepath),
+        "csv_filepath": csv_filepath
+    })
  
 @app.route('/generate_image', methods=['POST'])
 def generate_from_image():
