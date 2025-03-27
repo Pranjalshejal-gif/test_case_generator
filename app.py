@@ -12,7 +12,7 @@ from datetime import datetime
 app = Flask(__name__)
  
 # Configure Gemini AI API
-GEMINI_API_KEY = "AIzaSyDMel3d4igbE_Zc_vfAekW7tQNP9bPdZzw"  # Replace with actual key
+GEMINI_API_KEY = "AIzaSyAG-EcIMhPiHxiY7JJ9_Hc3ILWRJr0rOSA"  # Replace with actual key
 genai.configure(api_key=GEMINI_API_KEY)
  
 # Jenkins workspace path
@@ -41,72 +41,30 @@ def extract_text_from_image(image_path):
         return None
  
  
-# def generate_test_cases(prompt, num_cases=5):
-#     """Generate test cases using Google Gemini AI."""
-#     try:
-#         model = genai.GenerativeModel("gemini-2.0-flash")
-#         detailed_prompt = f"""
-#         Generate {num_cases} detailed test cases for: {prompt}.
-#         Each test case should be a JSON object with these fields:
-#         - "Test Case ID"
-#         - "Test Case Name"
-#         - "Request"
-#         - "Response"
-#         - "Request Headers"
-#         - "Response Headers"
-#         - "Expected Message"
-#         - "Error Code"
-#         - "Error Message"
-#         Return ONLY a JSON array.
-#         """
-#         response = model.generate_content(detailed_prompt)
-#         return response.text.strip() if response and response.text else {"error": "No response from AI."}
-#     except Exception as e:
-#         return {"error": f"Error generating test cases: {str(e)}"}
- 
- 
-
- 
-
 def generate_test_cases(prompt, num_cases=5):
     """Generate test cases using Google Gemini AI."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
-        
-        # Enforcing AI to return valid JSON
         detailed_prompt = f"""
-        Generate {num_cases} detailed test cases for: "{prompt}".
-        Each test case must be a JSON object inside an array with the following fields:
-        [
-            {{
-                "Test Case ID": "TC001",
-                "Test Case Name": "Verify login API with valid credentials",
-                "Request": {{}},
-                "Response": {{}},
-                "Request Headers": {{}},
-                "Response Headers": {{}},
-                "Expected Message": "Login successful",
-                "Error Code": null,
-                "Error Message": null
-            }}
-        ]
-        
-        Return **only** a valid JSON array without explanations, comments, or formatting hints.
+        Generate {num_cases} detailed test cases for: {prompt}.
+        Each test case should be a JSON object with these fields:
+        - "Test Case ID"
+        - "Test Case Name"
+        - "Request"
+        - "Response"
+        - "Request Headers"
+        - "Response Headers"
+        - "Expected Message"
+        - "Error Code"
+        - "Error Message"
+        Return ONLY a JSON array.
         """
-
         response = model.generate_content(detailed_prompt)
-        ai_output = response.text.strip() if response and response.text else ""
-
-        # Ensure AI response is valid JSON
-        try:
-            test_cases = json.loads(ai_output)
-            return test_cases
-        except json.JSONDecodeError:
-            return {"error": "AI did not return valid JSON."}
-
+        return response.text.strip() if response and response.text else {"error": "No response from AI."}
     except Exception as e:
         return {"error": f"Error generating test cases: {str(e)}"}
-
+ 
+ 
 # def parse_test_cases(ai_output):
 #     """Parses AI output into JSON format."""
 #     try:
@@ -121,22 +79,18 @@ def parse_test_cases(ai_output):
         # Extract JSON from AI response
         json_match = re.search(r"\[.*\]", ai_output, re.DOTALL)
         if json_match:
-            json_text = json_match.group(0).strip()
-
-            json_text = json_text.replace("'", '"')  # Replace single quotes with double quotes
-            json_text = re.sub(r",\s*}", "}", json_text)  # Remove trailing commas
-
-
+            json_text = json_match.group(0)
+ 
             # Replace single quotes with double quotes if needed
-            # json_text = json_text.replace("'", '"')
-
+            json_text = json_text.replace("'", '"')
+ 
             # Parse and return JSON
             return json.loads(json_text)
         else:
             return {"error": "No valid JSON found in AI response."}
     except json.JSONDecodeError as e:
-        return {"error": f"Error parsing AI output: {str(e)}"} 
-
+        return {"error": f"Error parsing AI output: {str(e)}"}
+ 
     
  
 # def save_as_csv(test_cases, user_filename):
@@ -184,14 +138,14 @@ def save_as_csv(test_cases, user_filename):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{user_filename}_{timestamp}.csv"
     filepath = os.path.join(WORKSPACE, filename)
-
+ 
     csv_headers = ["Test Case ID", "Test Summary", "Test Step", "Test Type", "Test Data", "Expected Result"]
-
+ 
     try:
         with open(filepath, "w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=csv_headers)
             writer.writeheader()
-
+ 
             for case in test_cases:
                 writer.writerow({
                     "Test Case ID": case.get("Test Case ID", ""),
@@ -210,7 +164,7 @@ def save_as_csv(test_cases, user_filename):
                         "Error Message": case.get("Error Message", "")
                     }, indent=4),  # Pretty format for readability
                 })
-
+ 
         return filepath
     except Exception as e:
         return {"error": f"Error saving CSV: {str(e)}"}
@@ -259,35 +213,35 @@ def generate_from_pdf():
     """Generates test cases from a provided PDF file path."""
     
     pdf_path = request.form.get("pdf_path")
-
+ 
     if not pdf_path or not os.path.exists(pdf_path):
         return jsonify({"error": "Invalid or missing PDF file path."}), 400
-
+ 
     extracted_text = extract_text_from_pdf(pdf_path)
     if not extracted_text:
         return jsonify({"error": "Could not extract text from the provided PDF file."}), 500
-
+ 
     num_cases = min(int(request.form.get("num_cases", 5)), 100)  # Limit to 100 test cases
     user_prompt = request.form.get("prompt", "Generate test cases based on this document.")
-
+ 
     print("\n🔹 Extracted PDF Text:\n", extracted_text[:1000])  # Print first 1000 chars for debugging
-
+ 
     ai_output = generate_test_cases(f"{user_prompt}\n{extracted_text}", num_cases)
-
+ 
     print("\n🔹 AI Raw Response:\n", ai_output)  # Debugging: Print raw AI response
-
+ 
     if not ai_output or isinstance(ai_output, dict) and "error" in ai_output:
         return jsonify({"error": "AI failed to generate test cases."}), 500
-
+ 
     parsed_test_cases = parse_test_cases(ai_output)
-
+ 
     print("\n🔹 Parsed Test Cases:\n", parsed_test_cases)  # Debugging: Print parsed test cases
-
+ 
     if isinstance(parsed_test_cases, dict) and "error" in parsed_test_cases:
         return jsonify(parsed_test_cases), 500
-
+ 
     csv_filepath = save_as_csv(parsed_test_cases, os.path.splitext(os.path.basename(pdf_path))[0])
-
+ 
     return jsonify({
         "message": "Test cases generated successfully!",
         "csv_filename": os.path.basename(csv_filepath),
@@ -362,7 +316,7 @@ def generate_from_pdf_and_image():
         "csv_filename": os.path.basename(csv_filepath),
         "csv_filepath": csv_filepath
     })
-
+ 
  
 def generate_and_save_test_cases(prompt, num_cases, filename):
     ai_output = generate_test_cases(prompt, num_cases)
@@ -395,7 +349,7 @@ def download_file(filename):
         )
     except FileNotFoundError:
         return jsonify({"error": "File not found."}), 404
-
+ 
  
  
 if __name__ == "__main__":
