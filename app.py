@@ -41,30 +41,72 @@ def extract_text_from_image(image_path):
         return None
  
  
+# def generate_test_cases(prompt, num_cases=5):
+#     """Generate test cases using Google Gemini AI."""
+#     try:
+#         model = genai.GenerativeModel("gemini-2.0-flash")
+#         detailed_prompt = f"""
+#         Generate {num_cases} detailed test cases for: {prompt}.
+#         Each test case should be a JSON object with these fields:
+#         - "Test Case ID"
+#         - "Test Case Name"
+#         - "Request"
+#         - "Response"
+#         - "Request Headers"
+#         - "Response Headers"
+#         - "Expected Message"
+#         - "Error Code"
+#         - "Error Message"
+#         Return ONLY a JSON array.
+#         """
+#         response = model.generate_content(detailed_prompt)
+#         return response.text.strip() if response and response.text else {"error": "No response from AI."}
+#     except Exception as e:
+#         return {"error": f"Error generating test cases: {str(e)}"}
+ 
+ 
+
+ 
+
 def generate_test_cases(prompt, num_cases=5):
     """Generate test cases using Google Gemini AI."""
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
+        
+        # Enforcing AI to return valid JSON
         detailed_prompt = f"""
-        Generate {num_cases} detailed test cases for: {prompt}.
-        Each test case should be a JSON object with these fields:
-        - "Test Case ID"
-        - "Test Case Name"
-        - "Request"
-        - "Response"
-        - "Request Headers"
-        - "Response Headers"
-        - "Expected Message"
-        - "Error Code"
-        - "Error Message"
-        Return ONLY a JSON array.
+        Generate {num_cases} detailed test cases for: "{prompt}".
+        Each test case must be a JSON object inside an array with the following fields:
+        [
+            {{
+                "Test Case ID": "TC001",
+                "Test Case Name": "Verify login API with valid credentials",
+                "Request": {{}},
+                "Response": {{}},
+                "Request Headers": {{}},
+                "Response Headers": {{}},
+                "Expected Message": "Login successful",
+                "Error Code": null,
+                "Error Message": null
+            }}
+        ]
+        
+        Return **only** a valid JSON array without explanations, comments, or formatting hints.
         """
+
         response = model.generate_content(detailed_prompt)
-        return response.text.strip() if response and response.text else {"error": "No response from AI."}
+        ai_output = response.text.strip() if response and response.text else ""
+
+        # Ensure AI response is valid JSON
+        try:
+            test_cases = json.loads(ai_output)
+            return test_cases
+        except json.JSONDecodeError:
+            return {"error": "AI did not return valid JSON."}
+
     except Exception as e:
         return {"error": f"Error generating test cases: {str(e)}"}
- 
- 
+
 # def parse_test_cases(ai_output):
 #     """Parses AI output into JSON format."""
 #     try:
@@ -79,10 +121,14 @@ def parse_test_cases(ai_output):
         # Extract JSON from AI response
         json_match = re.search(r"\[.*\]", ai_output, re.DOTALL)
         if json_match:
-            json_text = json_match.group(0)
+            json_text = json_match.group(0).strip()
+
+            json_text = json_text.replace("'", '"')  # Replace single quotes with double quotes
+            json_text = re.sub(r",\s*}", "}", json_text)  # Remove trailing commas
+
 
             # Replace single quotes with double quotes if needed
-            json_text = json_text.replace("'", '"')
+            # json_text = json_text.replace("'", '"')
 
             # Parse and return JSON
             return json.loads(json_text)
