@@ -100,11 +100,17 @@ pipeline {
                         """, returnStdout: true).trim()
                     } else {
                         echo " Generating test cases from text..."
+                        // jsonResponse = sh(script: """
+                        //     curl -s -X POST http://127.0.0.1:5000/generate \
+                        //     -H "Content-Type: application/json" \
+                        //     -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${Math.min(params.NUM_CASES.toInteger(), 100)}, "filename": "${params.CSV_FILENAME}"}'
+                        // """, returnStdout: true).trim()
                         jsonResponse = sh(script: """
-                            curl -s -X POST http://127.0.0.1:5000/generate \
-                            -H "Content-Type: application/json" \
-                            -d '{"topic": "${params.TEST_TOPIC}", "num_cases": ${Math.min(params.NUM_CASES.toInteger(), 100)}, "filename": "${params.CSV_FILENAME}"}'
-                        """, returnStdout: true).trim()
+                                 curl -s -X POST http://127.0.0.1:5000/generate \
+                                -H "Content-Type: application/json" \
+                               -d '{\"topic\": \"${params.TEST_TOPIC}\", \"num_cases\": ${Math.min(params.NUM_CASES.toInteger(), 100)}, \"filename\": \"${params.CSV_FILENAME}\"}'
+                               """, returnStdout: true).trim()
+
                     }
 
                     echo "🔹 API Response: ${jsonResponse}"
