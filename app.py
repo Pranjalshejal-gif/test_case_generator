@@ -51,9 +51,9 @@ def generate_test_cases(prompt, num_cases=5):
         - "Test Case ID"
         - "Test Case Name"
         - "Request"
-        - "Response"
-        - "Request Headers"
-        - "Response Headers"
+        # - "Response"
+        # - "Request Headers"
+        # - "Response Headers"
         - "Expected Message"
         - "Error Code"
         - "Error Message"
@@ -154,9 +154,9 @@ def save_as_csv(test_cases, user_filename):
                     "Test Step": case.get("Test Case ID", ""),  # Assigning test case ID as test step
                     "Test Data": json.dumps({
                         "Request": case.get("Request", {}),
-                        "Request Headers": case.get("Request Headers", {}),
-                        "Response": case.get("Response", {}),
-                        "Response Headers": case.get("Response Headers", {})
+                        # "Request Headers": case.get("Request Headers", {}),
+                        # "Response": case.get("Response", {}),
+                        # "Response Headers": case.get("Response Headers", {})
                     }, indent=4),  # Pretty format for readability
                     "Expected Result": json.dumps({
                         "Expected Message": case.get("Expected Message", ""),
